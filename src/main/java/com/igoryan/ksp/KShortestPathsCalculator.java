@@ -10,4 +10,8 @@ public interface KShortestPathsCalculator {
 
   List<ShortestPath> calculate(final Node src, final Node dst, final MutableNetwork<Node, ParallelEdges> network,
       int count);
+
+  default void clear() {
+
+  }
 }
