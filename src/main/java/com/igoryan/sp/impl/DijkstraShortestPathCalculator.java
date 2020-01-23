@@ -36,7 +36,8 @@ public class DijkstraShortestPathCalculator extends BaseDijkstraShortestPathCalc
   protected void relaxation(Node u, Node v, ParallelEdges parallelEdges,
       PriorityQueue<Node> queue) {
     final Edge edge = Objects.requireNonNull(parallelEdges.peek());
-    final long fromUToV = u.getDistance() + edge.getCost();
+    final long fromUToV =
+        u.getDistance() < Long.MAX_VALUE ? u.getDistance() + edge.getCost() : Long.MAX_VALUE;
     if (fromUToV < v.getDistance()) {
       queue.remove(v);
       v.setDistance(fromUToV);

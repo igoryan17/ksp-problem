@@ -32,7 +32,7 @@ public final class Node {
     this.isTransit = isTransit;
   }
 
-  public Node(final @NonNull Node node, final @NonNull Node predecessor) {
+  public Node(final @NonNull Node node, final @Nullable Node predecessor) {
     this.swNum = node.getSwNum();
     this.isTransit = node.isTransit;
     this.distance = node.getDistance();
@@ -85,7 +85,7 @@ public final class Node {
       nodes.addFirst(swNumToOriginalNode.get(temp.getSwNum()));
       temp = temp.getNodePredecessor();
     }
-    nodes.addFirst(temp);
+    nodes.addFirst(swNumToOriginalNode.get(temp.getSwNum()));
     return new ShortestPath(temp, this, new ArrayList<>(edges),
         new ArrayList<>(nodes), getDistance());
   }

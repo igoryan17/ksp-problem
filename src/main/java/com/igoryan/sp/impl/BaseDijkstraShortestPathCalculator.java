@@ -46,7 +46,7 @@ public abstract class BaseDijkstraShortestPathCalculator implements ShortestPath
   protected ShortestPathsTree getShortestPathsTree(final Node src, final Node dst,
       final Network<Node, ParallelEdges> network) {
     return cachedShortestPathTrees.computeIfAbsent(src.getSwNum(), key -> {
-      calculateShortestPath(src, dst, network, true);
+      calculate(src, dst, network);
       return ShortestPathsUtil.buildRecursively(src, network.nodes());
     });
   }

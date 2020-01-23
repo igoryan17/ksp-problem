@@ -42,4 +42,9 @@ public class YenKShortestPathsCalculatorWithNoTransit extends BaseYenKShortestPa
     removeNodeFromTransitSubGraph(dst, subNetworkWithTransits);
     return result;
   }
+
+  @Override
+  public void clear() {
+    subNetworkWithTransits = null;
+  }
 }
