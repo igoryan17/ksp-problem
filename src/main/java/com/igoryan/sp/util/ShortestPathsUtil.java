@@ -21,11 +21,10 @@ public final class ShortestPathsUtil {
       final @NonNull Collection<Node> nodes) {
     final Map<Integer, Node> swNumToNodeOfTree = new HashMap<>();
     final Map<Integer, Node> swNumToOriginalNode = new HashMap<>();
+    swNumToNodeOfTree.put(src.getSwNum(), new Node(src, null));
+    swNumToOriginalNode.put(src.getSwNum(), src);
     for (final Node node : nodes) {
       final Node predecessor = node.getNodePredecessor();
-      if (node == src) {
-        swNumToNodeOfTree.putIfAbsent(src.getSwNum(), new Node(node, null));
-      }
       if (predecessor == null) {
         continue;
       }
@@ -37,11 +36,10 @@ public final class ShortestPathsUtil {
 
   public static Node addNode(final @NonNull Node node,
       final @NonNull Map<Integer, Node> swNumToNodeOfTree) {
-    if (node.getNodePredecessor() == null) {
-      return swNumToNodeOfTree.put(node.getSwNum(), new Node(node.getSwNum(), node.isTransit()));
+    final Node predecessor = swNumToNodeOfTree.get(node.getNodePredecessor().getSwNum());
+    if (predecessor == null) {
+      addNode(node.getNodePredecessor(), swNumToNodeOfTree);
     }
-    final Node predecessor = swNumToNodeOfTree.computeIfAbsent(node.getNodePredecessor().getSwNum(),
-        key -> addNode(node.getNodePredecessor(), swNumToNodeOfTree));
     return swNumToNodeOfTree.put(node.getSwNum(), new Node(node, predecessor));
   }
 
