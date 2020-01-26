@@ -25,7 +25,7 @@ public final class ShortestPath {
   @Getter
   private final List<Edge> edges;
   @Getter
-  private final List<Node> vertexes;
+  private final List<Node> nodes;
   @Getter
   private final Map<Node, Integer> nodeToIndex;
   @Getter
@@ -40,18 +40,18 @@ public final class ShortestPath {
   private transient int hash;
 
   public ShortestPath(final @NonNull Node src, final @NonNull Node dst,
-      final @NonNull List<Edge> edges, final @NonNull List<Node> vertexes, final long cost) {
+      final @NonNull List<Edge> edges, final @NonNull List<Node> nodes, final long cost) {
     assert !edges.isEmpty();
-    assert !vertexes.isEmpty();
-    assert vertexes.get(0) == src;
-    assert vertexes.get(vertexes.size() - 1) == dst;
+    assert !nodes.isEmpty();
+    assert nodes.get(0) == src;
+    assert nodes.get(nodes.size() - 1) == dst;
     assert edges.get(0).getSrcSwNum() == src.getSwNum();
     assert edges.get(edges.size() - 1).getDstSwNum() == dst.getSwNum();
-    assert vertexes.size() == edges.size() + 1;
+    assert nodes.size() == edges.size() + 1;
     this.src = src;
     this.dst = dst;
     this.edges = unmodifiableList(edges);
-    this.vertexes = unmodifiableList(vertexes);
+    this.nodes = unmodifiableList(nodes);
     this.cost = cost;
     this.reducedCost = edges.stream().mapToLong(Edge::getReducedCost).sum();
     this.edgesHashes = new int[edges.size()];
@@ -59,9 +59,9 @@ public final class ShortestPath {
     this.edgesCostCache = new long[edges.size()];
     this.edgesCostCache[0] = edges.get(0).getCost();
     this.keys = new ArrayList<>(edges.size());
-    this.nodeToIndex = new HashMap<>(vertexes.size());
-    for (int i = 0; i < vertexes.size(); i++) {
-      nodeToIndex.put(vertexes.get(i), i);
+    this.nodeToIndex = new HashMap<>(nodes.size());
+    for (int i = 0; i < nodes.size(); i++) {
+      nodeToIndex.put(nodes.get(i), i);
     }
   }
 
@@ -69,7 +69,7 @@ public final class ShortestPath {
     this.src = srcAndDst;
     this.dst = srcAndDst;
     this.edges = emptyList();
-    this.vertexes = singletonList(srcAndDst);
+    this.nodes = singletonList(srcAndDst);
     this.nodeToIndex = singletonMap(srcAndDst, srcAndDst.getSwNum());
     this.cost = 0;
     this.reducedCost = 0;
@@ -79,13 +79,13 @@ public final class ShortestPath {
   }
 
   public ShortestPath(final @NonNull Node src, final @NonNull Node dst,
-      final @NonNull List<Edge> edges, final @NonNull List<Node> vertexes, final long cost,
+      final @NonNull List<Edge> edges, final @NonNull List<Node> nodes, final long cost,
       final long reducedCost) {
     assert !edges.isEmpty();
     this.src = src;
     this.dst = dst;
     this.edges = unmodifiableList(edges);
-    this.vertexes = unmodifiableList(vertexes);
+    this.nodes = unmodifiableList(nodes);
     this.cost = cost;
     this.reducedCost = reducedCost;
     this.edgesHashes = new int[edges.size()];
@@ -93,26 +93,26 @@ public final class ShortestPath {
     this.edgesCostCache = new long[edges.size()];
     this.edgesCostCache[0] = edges.get(0).getCost();
     this.keys = new ArrayList<>(edges.size());
-    this.nodeToIndex = new HashMap<>(vertexes.size());
-    for (int i = 0; i < vertexes.size(); i++) {
-      nodeToIndex.put(vertexes.get(i), i);
+    this.nodeToIndex = new HashMap<>(nodes.size());
+    for (int i = 0; i < nodes.size(); i++) {
+      nodeToIndex.put(nodes.get(i), i);
     }
   }
 
   public ShortestPath(final @NonNull Node src, final @NonNull Node dst,
-      final @NonNull List<Edge> edges, final @NonNull List<Node> vertexes, final long cost,
+      final @NonNull List<Edge> edges, final @NonNull List<Node> nodes, final long cost,
       final int[] edgesHashes, final long[] edgesCostCache, final List<NodeEdgeTuple> keys) {
     this.src = src;
     this.dst = dst;
     this.edges = edges;
-    this.vertexes = vertexes;
+    this.nodes = nodes;
     this.cost = cost;
     this.reducedCost = edges.stream().mapToLong(Edge::getReducedCost).sum();
     this.edgesHashes = edgesHashes;
     this.edgesCostCache = edgesCostCache;
     this.keys = keys;
     this.nodeToIndex =
-        vertexes.stream().collect(Collectors.toMap(Function.identity(), Node::getSwNum));
+        nodes.stream().collect(Collectors.toMap(Function.identity(), Node::getSwNum));
   }
 
   public ShortestPath append(final @NonNull ShortestPath shortestPath) {
@@ -120,9 +120,9 @@ public final class ShortestPath {
     links.addAll(this.edges);
     links.addAll(shortestPath.edges);
     final List<Node> vertexes =
-        new ArrayList<>(this.vertexes.size() + shortestPath.vertexes.size() - 1);
-    vertexes.addAll(this.vertexes);
-    vertexes.addAll(shortestPath.vertexes.subList(1, shortestPath.vertexes.size()));
+        new ArrayList<>(this.nodes.size() + shortestPath.nodes.size() - 1);
+    vertexes.addAll(this.nodes);
+    vertexes.addAll(shortestPath.nodes.subList(1, shortestPath.nodes.size()));
     return new ShortestPath(this.src, shortestPath.dst, links, vertexes,
         cost + shortestPath.cost);
   }
@@ -131,8 +131,8 @@ public final class ShortestPath {
     final List<Edge> links = new ArrayList<>(edges.size() + 1);
     links.addAll(this.edges);
     links.add(edge);
-    final List<Node> vertexes = new ArrayList<>(this.vertexes.size() + 1);
-    vertexes.addAll(this.vertexes);
+    final List<Node> vertexes = new ArrayList<>(this.nodes.size() + 1);
+    vertexes.addAll(this.nodes);
     vertexes.add(headOfEdge);
     return new ShortestPath(this.src, headOfEdge, links, vertexes, this.cost + edge.getCost(),
         this.reducedCost + edge.getReducedCost());
@@ -140,14 +140,14 @@ public final class ShortestPath {
 
   public ShortestPath subPath(int i) {
     assert i >= 0;
-    assert i < vertexes.size();
+    assert i < nodes.size();
     if (i == 0) {
       return new ShortestPath(src);
     }
-    return new ShortestPath(this.src, this.vertexes.get(i), this.edges.subList(0, i),
-        this.vertexes.subList(0, i + 1), getEdgesCost(i),
+    return new ShortestPath(this.src, this.nodes.get(i), this.edges.subList(0, i),
+        this.nodes.subList(0, i + 1), getEdgesCost(i),
         Arrays.copyOfRange(edgesHashes, 0, i), Arrays.copyOfRange(edgesCostCache, 0, i),
-        this.keys.subList(0, i));
+        this.keys.subList(0, Math.min(i, keys.size())));
   }
 
   public boolean containsSubPath(final @NonNull ShortestPath shortestPath) {
@@ -176,7 +176,7 @@ public final class ShortestPath {
     assert nodeIndex >= 0;
     NodeEdgeTuple result = nodeIndex < keys.size() ? keys.get(nodeIndex) : null;
     if (result == null) {
-      result = new NodeEdgeTuple(vertexes.get(nodeIndex), edges.get(nodeIndex));
+      result = new NodeEdgeTuple(nodes.get(nodeIndex), edges.get(nodeIndex));
       keys.add(nodeIndex, result);
     }
     return result;
@@ -184,14 +184,14 @@ public final class ShortestPath {
 
   public boolean hasCycles() {
     if (uniqueVertexes == null) {
-      uniqueVertexes = vertexes.stream().map(Node::getSwNum).collect(Collectors.toSet());
+      uniqueVertexes = nodes.stream().map(Node::getSwNum).collect(Collectors.toSet());
     }
-    return uniqueVertexes.size() != vertexes.size();
+    return uniqueVertexes.size() != nodes.size();
   }
 
   public boolean formsCycle(final @NonNull Edge appendedEdge) {
     if (uniqueVertexes == null) {
-      uniqueVertexes = vertexes.stream().map(Node::getSwNum).collect(Collectors.toSet());
+      uniqueVertexes = nodes.stream().map(Node::getSwNum).collect(Collectors.toSet());
     }
     return uniqueVertexes.contains(appendedEdge.getDstSwNum());
   }

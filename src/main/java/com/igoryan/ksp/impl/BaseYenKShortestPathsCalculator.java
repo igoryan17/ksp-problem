@@ -36,7 +36,7 @@ public abstract class BaseYenKShortestPathsCalculator implements KShortestPathsC
         new PriorityQueue<>(Comparator.comparingLong(ShortestPath::getCost));
     for (int k = 1; k < count; k++) {
       ShortestPath previousShortest = result.get(k - 1);
-      for (int i = 0; i < previousShortest.getVertexes().size() - 1; i++) {
+      for (int i = 0; i < previousShortest.getNodes().size() - 1; i++) {
         // The sequence of nodes from the source to the spur node of the previous k-shortest path.
         final ShortestPath rootPath = previousShortest.subPath(i);
         // Remove the links that are part of the previous shortest paths which share the same
@@ -47,7 +47,7 @@ public abstract class BaseYenKShortestPathsCalculator implements KShortestPathsC
         for (ShortestPath shortestPath : result) {
           if (shortestPath.containsSubPath(rootPath)) {
             final EndpointPair<Node> nodePair = EndpointPair
-                .ordered(shortestPath.getVertexes().get(i), shortestPath.getVertexes().get(i + 1));
+                .ordered(shortestPath.getNodes().get(i), shortestPath.getNodes().get(i + 1));
             final Edge removedEdge = shortestPath.getEdges().get(i);
             final ParallelEdges parallelEdges = network.edgeConnectingOrNull(nodePair);
 
@@ -63,7 +63,7 @@ public abstract class BaseYenKShortestPathsCalculator implements KShortestPathsC
         }
         // remove each node in root path except spurNode
         for (int j = 0; j < i; j++) {
-          final Node node = rootPath.getVertexes().get(j);
+          final Node node = rootPath.getNodes().get(j);
           removedNodes.add(node);
           network.incidentEdges(node).forEach(edge -> {
             final EndpointPair<Node> endpointPair = network.incidentNodes(edge);
@@ -72,7 +72,7 @@ public abstract class BaseYenKShortestPathsCalculator implements KShortestPathsC
           network.removeNode(node);
         }
         // Spur node is retrieved from the previous k-shortest path, k − 1.
-        final Node spurNode = previousShortest.getVertexes().get(i);
+        final Node spurNode = previousShortest.getNodes().get(i);
         final ShortestPath spurPath =
             shortestPathCalculator.calculateShortestPath(spurNode, dst, network, false);
         if (spurPath != null) {

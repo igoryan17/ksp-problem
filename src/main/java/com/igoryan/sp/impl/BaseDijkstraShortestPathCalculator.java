@@ -26,7 +26,7 @@ public abstract class BaseDijkstraShortestPathCalculator implements ShortestPath
   public ShortestPathsTree calculateOfReversed(final Node src, final Node dst,
       final Network<Node, ParallelEdges> network, final boolean reversed) {
     calculate(src, dst, network);
-    return ShortestPathsUtil.buildRecursively(src, network.nodes(), true);
+    return ShortestPathsUtil.buildRecursively(src, network.nodes(), reversed);
   }
 
   @Override

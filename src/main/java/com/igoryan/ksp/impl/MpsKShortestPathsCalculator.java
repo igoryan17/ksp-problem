@@ -1,5 +1,7 @@
 package com.igoryan.ksp.impl;
 
+import static java.util.Collections.emptyList;
+
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
@@ -58,7 +60,12 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
     });
     final Queue<ShortestPath> candidates =
         new PriorityQueue<>(COMPARE_SHORTEST_PATHS_BY_REDUCED_COST);
-    candidates.add(shortestPathsTree.getShortestPathWithReducedCost(src.getSwNum()));
+    final ShortestPath firstShortestPath =
+        shortestPathsTree.getShortestPathWithReducedCost(src.getSwNum());
+    if (firstShortestPath == null) {
+      return emptyList();
+    }
+    candidates.add(firstShortestPath);
     int currentCount = 0;
     final List<ShortestPath> result = new ArrayList<>();
     final KShortestPathsTree kShortestPathsTree = new KShortestPathsTree();
@@ -78,12 +85,13 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
       int indexOfTarget = shortestPath.getIndex(shortestPath.getDst());
       int nodeIndex = shortestPath.getIndex(deviationNode);
       do {
+        deviationNode = shortestPath.getNodes().get(nodeIndex);
         final SortedParallelEdges sortedParallelEdges =
             edgesStructure.get(deviationNode.getSwNum());
         final Edge[] parallelEdges = sortedParallelEdges.getSortedEdges();
         toDeviationNode = shortestPath.subPath(nodeIndex);
         Edge deviationEdge = null;
-        for (int i = sortedParallelEdges.getIndex(nodeEdgeTuple.getEdge()) + 1;
+        for (int i = sortedParallelEdges.getIndex(shortestPath.getEdges().get(nodeIndex)) + 1;
             i < parallelEdges.length; i++) {
           final Edge edge = parallelEdges[i];
           if (toDeviationNode.formsCycle(edge)) {

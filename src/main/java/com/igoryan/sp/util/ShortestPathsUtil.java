@@ -8,6 +8,7 @@ import com.igoryan.model.ShortestPathsTree;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -36,11 +37,13 @@ public final class ShortestPathsUtil {
 
   public static Node addNode(final @NonNull Node node,
       final @NonNull Map<Integer, Node> swNumToNodeOfTree) {
-    final Node predecessor = swNumToNodeOfTree.get(node.getNodePredecessor().getSwNum());
+    Node predecessor = swNumToNodeOfTree.get(node.getNodePredecessor().getSwNum());
     if (predecessor == null) {
-      addNode(node.getNodePredecessor(), swNumToNodeOfTree);
+      predecessor = Objects.requireNonNull(addNode(node.getNodePredecessor(), swNumToNodeOfTree));
     }
-    return swNumToNodeOfTree.put(node.getSwNum(), new Node(node, predecessor));
+    final Node result = new Node(node, predecessor);
+    swNumToNodeOfTree.put(node.getSwNum(), result);
+    return result;
   }
 
   public static Set<Node> getTransitNodes(final @NonNull Network<Node, ParallelEdges> network) {
