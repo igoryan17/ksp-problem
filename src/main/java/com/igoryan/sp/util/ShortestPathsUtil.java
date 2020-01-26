@@ -18,7 +18,7 @@ public final class ShortestPathsUtil {
   }
 
   public static ShortestPathsTree buildRecursively(final @NonNull Node src,
-      final @NonNull Collection<Node> nodes) {
+      final @NonNull Collection<Node> nodes, final boolean reversed) {
     final Map<Integer, Node> swNumToNodeOfTree = new HashMap<>();
     final Map<Integer, Node> swNumToOriginalNode = new HashMap<>();
     swNumToNodeOfTree.put(src.getSwNum(), new Node(src, null));
@@ -31,7 +31,7 @@ public final class ShortestPathsUtil {
       swNumToOriginalNode.putIfAbsent(node.getSwNum(), node);
       addNode(node, swNumToNodeOfTree);
     }
-    return new ShortestPathsTree(src.getSwNum(), swNumToNodeOfTree, swNumToOriginalNode);
+    return new ShortestPathsTree(src.getSwNum(), swNumToNodeOfTree, swNumToOriginalNode, reversed);
   }
 
   public static Node addNode(final @NonNull Node node,

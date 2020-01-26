@@ -2,6 +2,7 @@ package com.igoryan.model;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @RequiredArgsConstructor
 public final class Edge {
@@ -16,6 +17,9 @@ public final class Edge {
   private final short dstPort;
   @Getter
   private final long cost;
+  @Getter
+  @Setter
+  private transient long reducedCost;
   private transient int hash;
 
   @Override

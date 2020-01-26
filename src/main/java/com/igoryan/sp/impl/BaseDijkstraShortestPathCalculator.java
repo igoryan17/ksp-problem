@@ -23,13 +23,21 @@ public abstract class BaseDijkstraShortestPathCalculator implements ShortestPath
   protected final Map<Integer, ShortestPathsTree> cachedShortestPathTrees = new HashMap<>();
 
   @Override
+  public ShortestPathsTree calculateOfReversed(final Node src, final Node dst,
+      final Network<Node, ParallelEdges> network, final boolean reversed) {
+    calculate(src, dst, network);
+    return ShortestPathsUtil.buildRecursively(src, network.nodes(), true);
+  }
+
+  @Override
   public List<Edge> calculatePath(final Node src, final Node dst,
       final Network<Node, ParallelEdges> network, final boolean cache) {
     if (cache) {
-      return getShortestPathsTree(src, dst, network).getPath(dst.getSwNum());
+      return cachedShortestPathTrees.computeIfAbsent(src.getSwNum(),
+          key -> calculateOfReversed(src, dst, network, false)).getPath(dst.getSwNum());
     }
     calculate(src, dst, network);
-    return dst.buildPath();
+    return dst.buildPath(false);
   }
 
   @Override
@@ -37,18 +45,12 @@ public abstract class BaseDijkstraShortestPathCalculator implements ShortestPath
   public ShortestPath calculateShortestPath(final Node src, final Node dst,
       final Network<Node, ParallelEdges> network, boolean cache) {
     if (cache) {
-      return getShortestPathsTree(src, dst, network).getShortestPath(dst.getSwNum());
+      return cachedShortestPathTrees.computeIfAbsent(src.getSwNum(),
+          key -> calculateOfReversed(src, dst, network, false))
+          .getShortestPath(dst.getSwNum());
     }
     calculate(src, dst, network);
-    return dst.buildShortestPath();
-  }
-
-  protected ShortestPathsTree getShortestPathsTree(final Node src, final Node dst,
-      final Network<Node, ParallelEdges> network) {
-    return cachedShortestPathTrees.computeIfAbsent(src.getSwNum(), key -> {
-      calculate(src, dst, network);
-      return ShortestPathsUtil.buildRecursively(src, network.nodes());
-    });
+    return dst.buildShortestPath(false);
   }
 
   protected void init(Node src, final Network<Node, ParallelEdges> network) {
