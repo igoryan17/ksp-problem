@@ -10,13 +10,16 @@ import com.google.inject.Inject;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.Edge;
 import com.igoryan.model.KShortestPathsTree;
+import com.igoryan.model.MpsShortestPath;
 import com.igoryan.model.Node;
 import com.igoryan.model.NodeEdgeTuple;
 import com.igoryan.model.ParallelEdges;
+import com.igoryan.model.ReversedShortestPathTree;
 import com.igoryan.model.ShortestPath;
-import com.igoryan.model.ShortestPathsTree;
+import com.igoryan.model.ShortestPathCreator;
 import com.igoryan.model.SortedParallelEdges;
 import com.igoryan.sp.ShortestPathCalculator;
+import com.igoryan.sp.util.ShortestPathsUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -28,9 +31,12 @@ import java.util.Queue;
 
 public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
 
-  private static final Comparator<ShortestPath> COMPARE_SHORTEST_PATHS_BY_REDUCED_COST =
-      Comparator.comparingLong(ShortestPath::getReducedCost);
-
+  private static final Comparator<MpsShortestPath> COMPARE_SHORTEST_PATHS_BY_REDUCED_COST =
+      Comparator.comparingLong(MpsShortestPath::getCost);
+  private static final ShortestPathCreator<MpsShortestPath>
+      MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR = MpsShortestPath::new;
+  private final Map<Integer, ReversedShortestPathTree<MpsShortestPath>>
+      dstSwNumToCachedShortestPathTree = new HashMap<>();
   final ShortestPathCalculator shortestPathCalculator;
 
   @Inject
@@ -43,13 +49,17 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
   public List<ShortestPath> calculate(final Node src, final Node dst,
       final MutableNetwork<Node, ParallelEdges> network, final int count) {
     final Network<Node, ParallelEdges> reversed = Graphs.transpose(network);
-    final ShortestPathsTree shortestPathsTree =
-        shortestPathCalculator.calculateOfReversed(dst, src, reversed, true);
+    final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
+        dstSwNumToCachedShortestPathTree.computeIfAbsent(dst.getSwNum(), dstSwNum -> {
+          shortestPathCalculator.calculate(dst, src, reversed);
+          return ShortestPathsUtil.buildRevertedRecursively(MpsShortestPath.class, dst,
+              MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, reversed.nodes());
+        });
     final Map<Integer, SortedParallelEdges> edgesStructure = new HashMap<>(network.nodes().size());
     network.edges().forEach(parallelEdges -> {
       for (Edge edge : parallelEdges) {
-        final long costFromHead = shortestPathsTree.getCost(edge.getDstSwNum());
-        final long costFromTail = shortestPathsTree.getCost(edge.getSrcSwNum());
+        final long costFromHead = shortestPathTree.getCost(edge.getDstSwNum());
+        final long costFromTail = shortestPathTree.getCost(edge.getSrcSwNum());
         if (Long.MAX_VALUE == costFromHead || Long.MAX_VALUE == costFromTail) {
           edge.setReducedCost(Long.MAX_VALUE);
           continue;
@@ -58,10 +68,9 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
       }
       edgesStructure.put(parallelEdges.getSrcSwNum(), new SortedParallelEdges(parallelEdges));
     });
-    final Queue<ShortestPath> candidates =
+    final Queue<MpsShortestPath> candidates =
         new PriorityQueue<>(COMPARE_SHORTEST_PATHS_BY_REDUCED_COST);
-    final ShortestPath firstShortestPath =
-        shortestPathsTree.getShortestPathWithReducedCost(src.getSwNum());
+    final MpsShortestPath firstShortestPath = shortestPathTree.getShortestPath(src.getSwNum());
     if (firstShortestPath == null) {
       return emptyList();
     }
@@ -70,7 +79,7 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
     final List<ShortestPath> result = new ArrayList<>();
     final KShortestPathsTree kShortestPathsTree = new KShortestPathsTree();
     while (!candidates.isEmpty() && currentCount <= count) {
-      final ShortestPath shortestPath = candidates.poll();
+      final MpsShortestPath shortestPath = candidates.poll();
       final NodeEdgeTuple nodeEdgeTuple = kShortestPathsTree.getDeviationKey(shortestPath);
       if (!shortestPath.hasCycles()) {
         currentCount++;
@@ -81,7 +90,7 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
         continue;
       }
       Node deviationNode = nodeEdgeTuple.getNode();
-      ShortestPath toDeviationNode = null;
+      MpsShortestPath toDeviationNode = null;
       int indexOfTarget = shortestPath.getIndex(shortestPath.getDst());
       int nodeIndex = shortestPath.getIndex(deviationNode);
       do {
@@ -106,16 +115,21 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
         }
         final EndpointPair<Node> nodesOfDeviationEdge =
             network.incidentNodes(sortedParallelEdges.getParallelEdges());
+        final MpsShortestPath.Builder builder = MpsShortestPath.builder()
+            .from(toDeviationNode);
         if (nodesOfDeviationEdge.target() == dst) {
-          candidates.add(toDeviationNode.append(deviationEdge, dst));
+          candidates.add(builder.append(deviationEdge, dst).build());
           nodeIndex++;
           continue;
         }
-        final ShortestPath fromHeadOfDeviationNodeToDst =
-            shortestPathsTree.getShortestPathWithReducedCost(deviationEdge.getDstSwNum());
+        final List<Edge> fromHeadOfDeviationNodeToDst =
+            shortestPathTree.getPath(deviationEdge.getDstSwNum());
         if (fromHeadOfDeviationNodeToDst != null) {
-          candidates.add(toDeviationNode.append(deviationEdge, nodesOfDeviationEdge.target())
-              .append(fromHeadOfDeviationNodeToDst));
+          candidates.add(builder
+              .append(deviationEdge, nodesOfDeviationEdge.target())
+              .append(fromHeadOfDeviationNodeToDst, shortestPathTree.getSwNumToOriginalNode())
+              .build()
+          );
         }
         nodeIndex++;
       } while (!Objects.requireNonNull(toDeviationNode).hasCycles() && nodeIndex != indexOfTarget);

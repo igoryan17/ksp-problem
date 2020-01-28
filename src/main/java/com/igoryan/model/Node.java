@@ -43,18 +43,9 @@ public final class Node {
     this.nodePredecessor = predecessor;
   }
 
-  public List<Edge> buildPath(final boolean reversed) {
-    if (getNodePredecessor() == null) {
+  public List<Edge> buildPath() {
+    if (nodePredecessor == null) {
       return emptyList();
-    }
-    if (reversed) {
-      final List<Edge> edges = new ArrayList<>();
-      Node temp = this;
-      while (temp.getNodePredecessor() != null) {
-        edges.add(temp.getEdgePredecessor());
-        temp = temp.getNodePredecessor();
-      }
-      return edges;
     }
     final Deque<Edge> edges = new ArrayDeque<>();
     Node temp = this;
@@ -65,55 +56,24 @@ public final class Node {
     return new ArrayList<>(edges);
   }
 
-  @Nullable
-  public ShortestPath buildShortestPath(final boolean reversed) {
-    if (getNodePredecessor() == null) {
-      return null;
+  public List<Edge> buildReversed() {
+    if (nodePredecessor == null) {
+      return emptyList();
     }
-    if (reversed) {
-      final List<Edge> edges = new ArrayList<>();
-      final List<Node> nodes = new ArrayList<>();
-      Node temp = this;
-      while (temp.getNodePredecessor() != null) {
-        edges.add(temp.getEdgePredecessor());
-        nodes.add(temp);
-        temp = temp.getNodePredecessor();
-      }
-      nodes.add(temp);
-      return new ShortestPath(this, temp, edges, nodes, getDistance());
-    }
-    final Deque<Edge> edges = new ArrayDeque<>();
-    final Deque<Node> nodes = new ArrayDeque<>();
+    final List<Edge> edges = new ArrayList<>();
     Node temp = this;
     while (temp.getNodePredecessor() != null) {
-      edges.addFirst(temp.getEdgePredecessor());
-      nodes.addFirst(temp);
+      edges.add(temp.getEdgePredecessor());
       temp = temp.getNodePredecessor();
     }
-    nodes.addFirst(temp);
-    return new ShortestPath(temp, this, new ArrayList<>(edges),
-        new ArrayList<>(nodes), getDistance());
+    return edges;
   }
 
   @Nullable
-  public ShortestPath buildShortestPath(Map<Integer, Node> swNumToOriginalNode,
-      final boolean reversed) {
-    if (getNodePredecessor() == null) {
+  public <T extends ShortestPath> T buildShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator, Map<Integer, Node> swNumToOriginalNode) {
+    if (nodePredecessor == null) {
       return null;
-    }
-    if (reversed) {
-      final List<Edge> edges = new ArrayList<>();
-      final List<Node> nodes = new ArrayList<>();
-      Node temp = this;
-      while (temp.getNodePredecessor() != null) {
-        edges.add(temp.getEdgePredecessor());
-        nodes.add(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
-        temp = temp.getNodePredecessor();
-      }
-      final Node dst = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
-      nodes.add(dst);
-      return new ShortestPath(Objects.requireNonNull(swNumToOriginalNode.get(swNum)), dst, edges,
-          nodes, getDistance());
     }
     final Deque<Edge> edges = new ArrayDeque<>();
     final Deque<Node> nodes = new ArrayDeque<>();
@@ -125,42 +85,28 @@ public final class Node {
     }
     final Node src = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
     nodes.addFirst(src);
-    return new ShortestPath(src, Objects.requireNonNull(swNumToOriginalNode.get(swNum)),
-        new ArrayList<>(edges), new ArrayList<>(nodes), getDistance());
+    return shortestPathCreator.create(src, Objects.requireNonNull(swNumToOriginalNode.get(swNum)),
+        new ArrayList<>(edges), new ArrayList<>(nodes));
   }
 
   @Nullable
-  public ShortestPath buildShortestPathWithReducedCost(Map<Integer, Node> swNumToOriginalNode,
-      final boolean reversed) {
-    if (getNodePredecessor() == null) {
+  public <T extends ShortestPath> T buildReversedShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator, Map<Integer, Node> swNumToOriginalNode) {
+    if (nodePredecessor == null) {
       return null;
     }
-    if (reversed) {
-      final List<Edge> edges = new ArrayList<>();
-      final List<Node> nodes = new ArrayList<>();
-      Node temp = this;
-      while (temp.getNodePredecessor() != null) {
-        edges.add(temp.getEdgePredecessor());
-        nodes.add(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
-        temp = temp.getNodePredecessor();
-      }
-      final Node dst = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
-      nodes.add(dst);
-      return new ShortestPath(Objects.requireNonNull(swNumToOriginalNode.get(swNum)), dst, edges,
-          nodes, getDistance());
-    }
-    final Deque<Edge> edges = new ArrayDeque<>();
-    final Deque<Node> nodes = new ArrayDeque<>();
+    final List<Edge> edges = new ArrayList<>();
+    final List<Node> nodes = new ArrayList<>();
     Node temp = this;
     while (temp.getNodePredecessor() != null) {
-      edges.addFirst(temp.getEdgePredecessor());
-      nodes.addFirst(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
+      edges.add(temp.getEdgePredecessor());
+      nodes.add(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
       temp = temp.getNodePredecessor();
     }
-    final Node src = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
-    nodes.addFirst(src);
-    return new ShortestPath(src, Objects.requireNonNull(swNumToOriginalNode.get(swNum)),
-        new ArrayList<>(edges), new ArrayList<>(nodes), getDistance());
+    final Node dst = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
+    nodes.add(dst);
+    return shortestPathCreator
+        .create(Objects.requireNonNull(swNumToOriginalNode.get(swNum)), dst, edges, nodes);
   }
 
   @Override

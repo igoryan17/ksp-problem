@@ -4,6 +4,9 @@ import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.igoryan.model.Node;
 import com.igoryan.model.ParallelEdges;
+import com.igoryan.model.ReversedShortestPathTree;
+import com.igoryan.model.ShortestPath;
+import com.igoryan.model.ShortestPathCreator;
 import com.igoryan.model.ShortestPathsTree;
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,8 +21,10 @@ public final class ShortestPathsUtil {
   private ShortestPathsUtil() {
   }
 
-  public static ShortestPathsTree buildRecursively(final @NonNull Node src,
-      final @NonNull Collection<Node> nodes, final boolean reversed) {
+  public static <T extends ShortestPath> ShortestPathsTree<T> buildRecursively(
+      final @NonNull Class<T> type, final @NonNull Node src,
+      final ShortestPathCreator<T> shortestPathCreator,
+      final @NonNull Collection<Node> nodes) {
     final Map<Integer, Node> swNumToNodeOfTree = new HashMap<>();
     final Map<Integer, Node> swNumToOriginalNode = new HashMap<>();
     swNumToNodeOfTree.put(src.getSwNum(), new Node(src, null));
@@ -32,7 +37,28 @@ public final class ShortestPathsUtil {
       swNumToOriginalNode.putIfAbsent(node.getSwNum(), node);
       addNode(node, swNumToNodeOfTree);
     }
-    return new ShortestPathsTree(src.getSwNum(), swNumToNodeOfTree, swNumToOriginalNode, reversed);
+    return new ShortestPathsTree<>(swNumToNodeOfTree, swNumToOriginalNode, type,
+        shortestPathCreator, src.getSwNum());
+  }
+
+  public static <T extends ShortestPath> ReversedShortestPathTree<T> buildRevertedRecursively(
+      final @NonNull Class<T> type, final @NonNull Node dst,
+      final ShortestPathCreator<T> shortestPathCreator,
+      final @NonNull Collection<Node> nodes) {
+    final Map<Integer, Node> swNumToNodeOfTree = new HashMap<>();
+    final Map<Integer, Node> swNumToOriginalNode = new HashMap<>();
+    swNumToNodeOfTree.put(dst.getSwNum(), new Node(dst, null));
+    swNumToOriginalNode.put(dst.getSwNum(), dst);
+    for (final Node node : nodes) {
+      final Node predecessor = node.getNodePredecessor();
+      if (predecessor == null) {
+        continue;
+      }
+      swNumToOriginalNode.putIfAbsent(node.getSwNum(), node);
+      addNode(node, swNumToNodeOfTree);
+    }
+    return new ReversedShortestPathTree<>(swNumToNodeOfTree, swNumToOriginalNode, type,
+        shortestPathCreator, dst.getSwNum());
   }
 
   public static Node addNode(final @NonNull Node node,
