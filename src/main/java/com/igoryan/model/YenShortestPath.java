@@ -1,5 +1,6 @@
 package com.igoryan.model;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.NonNull;
@@ -64,6 +65,28 @@ public class YenShortestPath extends ShortestPath {
     return new YenShortestPath(this.src, this.nodes.get(i), this.edges.subList(0, i),
         this.nodes.subList(0, i + 1), getEdgesCost(i),
         Arrays.copyOfRange(edgesHashes, 0, i), Arrays.copyOfRange(edgesCostCache, 0, i));
+  }
+
+  public YenShortestPath append(final @NonNull YenShortestPath shortestPath) {
+    assert this.dst == shortestPath.src;
+    if (this.edges.isEmpty()) {
+      return shortestPath;
+    }
+    if (shortestPath.edges.isEmpty()) {
+      return this;
+    }
+    final List<Node> nodes = new ArrayList<>(this.nodes.size() + shortestPath.nodes.size() - 1);
+    nodes.addAll(this.nodes);
+    nodes.addAll(shortestPath.nodes.subList(1, shortestPath.nodes.size()));
+    final List<Edge> edges = new ArrayList<>(this.edges.size() + shortestPath.edges.size());
+    edges.addAll(this.edges);
+    edges.addAll(shortestPath.edges);
+    final int[] edgesHashes = new int[edges.size()];
+    System.arraycopy(this.edgesHashes, 0, edgesHashes, 0, this.edgesHashes.length);
+    final long[] edgesCostCache = new long[edges.size()];
+    System.arraycopy(this.edgesCostCache, 0, edgesCostCache, 0, this.edgesCostCache.length);
+    return new YenShortestPath(src, shortestPath.dst, edges, nodes, cost + shortestPath.cost,
+        edgesHashes, edgesCostCache);
   }
 
   public int getEdgesHash(int edgesCount) {

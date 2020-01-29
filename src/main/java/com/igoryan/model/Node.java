@@ -71,6 +71,24 @@ public final class Node {
 
   @Nullable
   public <T extends ShortestPath> T buildShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator) {
+    if (nodePredecessor == null) {
+      return null;
+    }
+    final Deque<Edge> edges = new ArrayDeque<>();
+    final Deque<Node> nodes = new ArrayDeque<>();
+    Node temp = this;
+    while (temp.getNodePredecessor() != null) {
+      edges.addFirst(temp.getEdgePredecessor());
+      nodes.addFirst(temp);
+      temp = temp.getNodePredecessor();
+    }
+    nodes.addFirst(temp);
+    return shortestPathCreator.create(temp, this, new ArrayList<>(edges), new ArrayList<>(nodes));
+  }
+
+  @Nullable
+  public <T extends ShortestPath> T buildShortestPath(Class<T> type,
       ShortestPathCreator<T> shortestPathCreator, Map<Integer, Node> swNumToOriginalNode) {
     if (nodePredecessor == null) {
       return null;

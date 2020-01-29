@@ -18,6 +18,7 @@ import com.igoryan.model.ReversedShortestPathTree;
 import com.igoryan.model.ShortestPath;
 import com.igoryan.model.ShortestPathCreator;
 import com.igoryan.model.SortedParallelEdges;
+import com.igoryan.model.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import com.igoryan.sp.util.ShortestPathsUtil;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
   }
 
   @Override
-  public List<ShortestPath> calculate(final Node src, final Node dst,
+  public List<YenShortestPath> calculate(final Node src, final Node dst,
       final MutableNetwork<Node, ParallelEdges> network, final int count) {
     final Network<Node, ParallelEdges> reversed = Graphs.transpose(network);
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =

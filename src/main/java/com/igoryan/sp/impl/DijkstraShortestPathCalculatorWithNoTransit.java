@@ -11,8 +11,7 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public class DijkstraShortestPathCalculatorWithNoTransit
-    extends BaseDijkstraShortestPathCalculator {
+public class DijkstraShortestPathCalculatorWithNoTransit extends BaseDijkstraShortestPathCalculator {
 
   private Set<Node> transitNodes;
 
@@ -72,11 +71,5 @@ public class DijkstraShortestPathCalculatorWithNoTransit
       }
     }
     src.setTransit(srcIsTransit);
-  }
-
-  @Override
-  public void clear() {
-    super.clear();
-    transitNodes = null;
   }
 }
