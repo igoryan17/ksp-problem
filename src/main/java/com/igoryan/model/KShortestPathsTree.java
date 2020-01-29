@@ -9,7 +9,7 @@ public class KShortestPathsTree {
 
   private final Map<NodeEdgeTuple, NodeEdgeTuple> connectionsOfRoot = new HashMap<>();
 
-  public void add(@NonNull ShortestPath path, int pathNum) {
+  public void add(@NonNull MpsShortestPath path, int pathNum) {
     final NodeEdgeTuple firstKey = path.getKey(0);
     NodeEdgeTuple temp = connectionsOfRoot.putIfAbsent(firstKey, firstKey);
     if (temp == null) {
@@ -30,7 +30,7 @@ public class KShortestPathsTree {
   }
 
   @Nullable
-  public NodeEdgeTuple getDeviationKey(@NonNull ShortestPath path) {
+  public NodeEdgeTuple getDeviationKey(@NonNull MpsShortestPath path) {
     final NodeEdgeTuple firstKey = path.getKey(0);
     NodeEdgeTuple temp = connectionsOfRoot.get(firstKey);
     if (temp == null) {

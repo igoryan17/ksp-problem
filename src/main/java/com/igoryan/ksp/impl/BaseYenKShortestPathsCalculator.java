@@ -20,12 +20,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
-public abstract class BaseYenKShortestPathsCalculator implements KShortestPathsCalculator {
+public abstract class BaseYenKShortestPathsCalculator
+    implements KShortestPathsCalculator<YenShortestPath> {
 
   protected static final ShortestPathCreator<YenShortestPath> SHORTEST_PATH_CREATOR =
       (src, dst, edges, nodes) -> new YenShortestPath(src, dst, edges, nodes, dst.getDistance());
 
-  protected final Map<Integer, ShortestPathsTree<YenShortestPath>> srcSwNumToCachedShortestPathTree =
+  protected final Map<Integer, ShortestPathsTree<YenShortestPath>>
+      srcSwNumToCachedShortestPathTree =
       new HashMap<>();
 
   protected final ShortestPathCalculator shortestPathCalculator;

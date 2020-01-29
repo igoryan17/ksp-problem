@@ -20,6 +20,8 @@ public class MpsShortestPath extends ShortestPath {
   private final transient NodeEdgeTuple[] keys;
 
   private transient Set<Integer> uniqueVertexes;
+  private transient long originalCost;
+  private transient int hash;
 
   public MpsShortestPath(final @NonNull Node src,
       final @NonNull Node dst,
@@ -82,11 +84,11 @@ public class MpsShortestPath extends ShortestPath {
     this.nodeToIndex = singletonMap(srcAndDst, 0);
   }
 
-  public boolean hasCycles() {
+  public boolean withoutLoops() {
     if (uniqueVertexes == null) {
       uniqueVertexes = nodes.stream().map(Node::getSwNum).collect(Collectors.toSet());
     }
-    return uniqueVertexes.size() != nodes.size();
+    return uniqueVertexes.size() == nodes.size();
   }
 
   public boolean formsCycle(final @NonNull Edge appendedEdge) {
@@ -94,6 +96,16 @@ public class MpsShortestPath extends ShortestPath {
       uniqueVertexes = nodes.stream().map(Node::getSwNum).collect(Collectors.toSet());
     }
     return uniqueVertexes.contains(appendedEdge.getDstSwNum());
+  }
+
+  @Override
+  public long getOriginalCost() {
+    long result = originalCost;
+    if (result == 0 && !edges.isEmpty()) {
+      result = edges.stream().mapToLong(Edge::getCost).sum();
+      originalCost = result;
+    }
+    return result;
   }
 
   public int getIndex(final @NonNull Node node) {
@@ -151,6 +163,16 @@ public class MpsShortestPath extends ShortestPath {
     vertexes.add(headOfEdge);
     return new ShortestPath(this.src, headOfEdge, links, vertexes, this.cost + edge.getCost(),
         Edge::getReducedCost);
+  }
+
+  @Override
+  public int hashCode() {
+    int h = hash;
+    if (h == 0 && !edges.isEmpty()) {
+      h = edges.hashCode();
+      hash = h;
+    }
+    return h;
   }
 
   public static Builder builder() {

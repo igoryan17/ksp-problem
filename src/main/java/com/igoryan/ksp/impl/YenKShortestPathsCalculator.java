@@ -6,12 +6,9 @@ import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.igoryan.model.Node;
 import com.igoryan.model.ParallelEdges;
-import com.igoryan.model.ShortestPathsTree;
 import com.igoryan.model.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
-import com.igoryan.sp.util.ShortestPathsUtil;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class YenKShortestPathsCalculator extends BaseYenKShortestPathsCalculator {

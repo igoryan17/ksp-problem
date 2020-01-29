@@ -1,9 +1,11 @@
 package com.igoryan.ksp.impl;
 
+import com.igoryan.model.MpsShortestPath;
 import com.igoryan.sp.impl.DijkstraShortestPathCalculator;
 import org.junit.Before;
 
-public class MpsKShortestPathsCalculatorTest extends BaseKShortestPathsCalculatorTest {
+public class MpsKShortestPathsCalculatorTest
+    extends BaseKShortestPathsCalculatorTest<MpsShortestPath> {
 
   @Before
   public void setUp() throws Exception {

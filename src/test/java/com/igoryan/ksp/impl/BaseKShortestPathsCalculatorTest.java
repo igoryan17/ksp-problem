@@ -17,14 +17,13 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Test;
 
-public class BaseKShortestPathsCalculatorTest {
+public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
 
   protected ShortestPathCalculator shortestPathCalculator;
-  protected KShortestPathsCalculator kShortestPathsCalculator;
+  protected KShortestPathsCalculator<T> kShortestPathsCalculator;
 
   @After
   public void tearDown() throws Exception {
-    shortestPathCalculator.clear();
     kShortestPathsCalculator.clear();
   }
 
@@ -46,11 +45,11 @@ public class BaseKShortestPathsCalculatorTest {
     network.addNode(src);
     network.addNode(dst);
     network.addEdge(src, dst, parallelEdges);
-    final List<ShortestPath> result = kShortestPathsCalculator.calculate(src, dst, network, 2);
+    final List<T> result = kShortestPathsCalculator.calculate(src, dst, network, 2);
     assertThat(result, hasSize(2));
-    assertThat(result.get(0).getCost(), is(1L));
+    assertThat(result.get(0).getOriginalCost(), is(1L));
     assertThat(result.get(0).getEdges(), contains(firstEdge));
-    assertThat(result.get(1).getCost(), is(2L));
+    assertThat(result.get(1).getOriginalCost(), is(2L));
     assertThat(result.get(1).getEdges(), contains(secondEdge));
   }
 
@@ -84,13 +83,13 @@ public class BaseKShortestPathsCalculatorTest {
     network.addEdge(src, transit, fromSrcToTransitEdges);
     network.addEdge(transit, dst, fromTransitToDstEdges);
 
-    final List<ShortestPath> result = kShortestPathsCalculator.calculate(src, dst, network, 2);
+    final List<T> result = kShortestPathsCalculator.calculate(src, dst, network, 2);
     assertThat(result, hasSize(2));
 
-    assertThat(result.get(0).getCost(), is(2L));
+    assertThat(result.get(0).getOriginalCost(), is(2L));
     assertThat(result.get(0).getEdges(), contains(fromSrcToTransit, firstFromTransitToSource));
 
-    assertThat(result.get(1).getCost(), is(3L));
+    assertThat(result.get(1).getOriginalCost(), is(3L));
     assertThat(result.get(1).getEdges(), contains(fromSrcToTransit, secondFromTransitToSource));
   }
 }

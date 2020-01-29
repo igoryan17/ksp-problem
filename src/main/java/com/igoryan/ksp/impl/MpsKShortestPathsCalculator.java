@@ -15,10 +15,8 @@ import com.igoryan.model.Node;
 import com.igoryan.model.NodeEdgeTuple;
 import com.igoryan.model.ParallelEdges;
 import com.igoryan.model.ReversedShortestPathTree;
-import com.igoryan.model.ShortestPath;
 import com.igoryan.model.ShortestPathCreator;
 import com.igoryan.model.SortedParallelEdges;
-import com.igoryan.model.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import com.igoryan.sp.util.ShortestPathsUtil;
 import java.util.ArrayList;
@@ -30,7 +28,7 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
-public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
+public class MpsKShortestPathsCalculator implements KShortestPathsCalculator<MpsShortestPath> {
 
   private static final Comparator<MpsShortestPath> COMPARE_SHORTEST_PATHS_BY_REDUCED_COST =
       Comparator.comparingLong(MpsShortestPath::getCost);
@@ -47,7 +45,7 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
   }
 
   @Override
-  public List<YenShortestPath> calculate(final Node src, final Node dst,
+  public List<MpsShortestPath> calculate(final Node src, final Node dst,
       final MutableNetwork<Node, ParallelEdges> network, final int count) {
     final Network<Node, ParallelEdges> reversed = Graphs.transpose(network);
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
@@ -77,12 +75,12 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
     }
     candidates.add(firstShortestPath);
     int currentCount = 0;
-    final List<ShortestPath> result = new ArrayList<>();
+    final List<MpsShortestPath> result = new ArrayList<>();
     final KShortestPathsTree kShortestPathsTree = new KShortestPathsTree();
     while (!candidates.isEmpty() && currentCount <= count) {
       final MpsShortestPath shortestPath = candidates.poll();
       final NodeEdgeTuple nodeEdgeTuple = kShortestPathsTree.getDeviationKey(shortestPath);
-      if (!shortestPath.hasCycles()) {
+      if (shortestPath.withoutLoops()) {
         currentCount++;
         result.add(shortestPath);
         kShortestPathsTree.add(shortestPath, count - 1);
@@ -133,8 +131,13 @@ public class MpsKShortestPathsCalculator implements KShortestPathsCalculator {
           );
         }
         nodeIndex++;
-      } while (!Objects.requireNonNull(toDeviationNode).hasCycles() && nodeIndex != indexOfTarget);
+      } while (Objects.requireNonNull(toDeviationNode).withoutLoops() && nodeIndex != indexOfTarget);
     }
     return result;
+  }
+
+  @Override
+  public void clear() {
+    dstSwNumToCachedShortestPathTree.clear();
   }
 }

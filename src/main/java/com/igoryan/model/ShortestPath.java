@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
-import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
@@ -75,18 +74,6 @@ public class ShortestPath {
     this.cost = 0;
   }
 
-  public ShortestPath append(final @NonNull ShortestPath shortestPath) {
-    final List<Edge> links = new ArrayList<>(edges.size() + shortestPath.edges.size());
-    links.addAll(this.edges);
-    links.addAll(shortestPath.edges);
-    final List<Node> vertexes =
-        new ArrayList<>(this.nodes.size() + shortestPath.nodes.size() - 1);
-    vertexes.addAll(this.nodes);
-    vertexes.addAll(shortestPath.nodes.subList(1, shortestPath.nodes.size()));
-    return new ShortestPath(this.src, shortestPath.dst, links, vertexes,
-        cost, edgeCostRetriever);
-  }
-
   public long getEdgesCost(int edgesCount) {
     assert edgesCount >= 0;
     assert edgesCount <= edges.size();
@@ -108,6 +95,10 @@ public class ShortestPath {
       }
       cost = edgesCostCache[edgesCount - 1];
     }
+    return cost;
+  }
+
+  public long getOriginalCost() {
     return cost;
   }
 
