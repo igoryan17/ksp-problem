@@ -6,12 +6,10 @@ import com.igoryan.model.ParallelEdges;
 import com.igoryan.model.ShortestPath;
 import java.util.List;
 
-public interface KShortestPathsCalculator {
+public interface KShortestPathsCalculator<T extends ShortestPath> {
 
-  List<ShortestPath> calculate(final Node src, final Node dst, final MutableNetwork<Node, ParallelEdges> network,
-      int count);
+  List<T> calculate(final Node src, final Node dst,
+      final MutableNetwork<Node, ParallelEdges> network, int count);
 
-  default void clear() {
-
-  }
+  void clear();
 }

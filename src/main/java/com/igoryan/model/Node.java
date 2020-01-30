@@ -1,10 +1,13 @@
 package com.igoryan.model;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,6 +20,9 @@ public final class Node {
   @Getter
   @Setter
   private boolean isTransit;
+  @Getter
+  @Setter
+  private boolean isVisited;
   @Getter
   @Setter
   private long distance;
@@ -40,23 +46,36 @@ public final class Node {
     this.nodePredecessor = predecessor;
   }
 
-  @Nullable
   public List<Edge> buildPath() {
-    if (getNodePredecessor() == null) {
-      return null;
+    if (nodePredecessor == null) {
+      return emptyList();
     }
-    final Deque<Edge> links = new ArrayDeque<>();
+    final Deque<Edge> edges = new ArrayDeque<>();
     Node temp = this;
     while (temp.getNodePredecessor() != null) {
-      links.addFirst(temp.getEdgePredecessor());
+      edges.addFirst(temp.getEdgePredecessor());
       temp = temp.getNodePredecessor();
     }
-    return new ArrayList<>(links);
+    return new ArrayList<>(edges);
+  }
+
+  public List<Edge> buildReversed() {
+    if (nodePredecessor == null) {
+      return emptyList();
+    }
+    final List<Edge> edges = new ArrayList<>();
+    Node temp = this;
+    while (temp.getNodePredecessor() != null) {
+      edges.add(temp.getEdgePredecessor());
+      temp = temp.getNodePredecessor();
+    }
+    return edges;
   }
 
   @Nullable
-  public ShortestPath buildShortestPath() {
-    if (getNodePredecessor() == null) {
+  public <T extends ShortestPath> T buildShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator) {
+    if (nodePredecessor == null) {
       return null;
     }
     final Deque<Edge> edges = new ArrayDeque<>();
@@ -68,13 +87,13 @@ public final class Node {
       temp = temp.getNodePredecessor();
     }
     nodes.addFirst(temp);
-    return new ShortestPath(temp, this, new ArrayList<>(edges),
-        new ArrayList<>(nodes), getDistance());
+    return shortestPathCreator.create(temp, this, new ArrayList<>(edges), new ArrayList<>(nodes));
   }
 
   @Nullable
-  public ShortestPath buildShortestPath(Map<Integer, Node> swNumToOriginalNode) {
-    if (getNodePredecessor() == null) {
+  public <T extends ShortestPath> T buildShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator, Map<Integer, Node> swNumToOriginalNode) {
+    if (nodePredecessor == null) {
       return null;
     }
     final Deque<Edge> edges = new ArrayDeque<>();
@@ -82,12 +101,33 @@ public final class Node {
     Node temp = this;
     while (temp.getNodePredecessor() != null) {
       edges.addFirst(temp.getEdgePredecessor());
-      nodes.addFirst(swNumToOriginalNode.get(temp.getSwNum()));
+      nodes.addFirst(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
       temp = temp.getNodePredecessor();
     }
-    nodes.addFirst(swNumToOriginalNode.get(temp.getSwNum()));
-    return new ShortestPath(temp, this, new ArrayList<>(edges),
-        new ArrayList<>(nodes), getDistance());
+    final Node src = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
+    nodes.addFirst(src);
+    return shortestPathCreator.create(src, Objects.requireNonNull(swNumToOriginalNode.get(swNum)),
+        new ArrayList<>(edges), new ArrayList<>(nodes));
+  }
+
+  @Nullable
+  public <T extends ShortestPath> T buildReversedShortestPath(Class<T> type,
+      ShortestPathCreator<T> shortestPathCreator, Map<Integer, Node> swNumToOriginalNode) {
+    if (nodePredecessor == null) {
+      return null;
+    }
+    final List<Edge> edges = new ArrayList<>();
+    final List<Node> nodes = new ArrayList<>();
+    Node temp = this;
+    while (temp.getNodePredecessor() != null) {
+      edges.add(temp.getEdgePredecessor());
+      nodes.add(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
+      temp = temp.getNodePredecessor();
+    }
+    final Node dst = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
+    nodes.add(dst);
+    return shortestPathCreator
+        .create(Objects.requireNonNull(swNumToOriginalNode.get(swNum)), dst, edges, nodes);
   }
 
   @Override

@@ -1,37 +1,56 @@
 package com.igoryan.model;
 
-import static java.util.Collections.emptyList;
-
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
+import lombok.NonNull;
 
-@Value
-@EqualsAndHashCode(of = "src")
-public class ShortestPathsTree {
+public class ShortestPathsTree<T extends ShortestPath> extends BaseShortestPathsTree<T> {
 
   private final int src;
-  private final Map<Integer, Node> swNumToNode;
-  private final Map<Integer, Node> swNumToOriginalNode;
 
-  public List<Edge> getPath(final int dstSwNum) {
-    final Node dstNode = swNumToNode.get(dstSwNum);
-    if (dstNode == null) {
-      return emptyList();
-    }
-    final List<Edge> result = dstNode.buildPath();
-    if (result == null) {
-      return emptyList();
-    }
-    return result;
+  public ShortestPathsTree(final @NonNull Map<Integer, Node> swNumToNode,
+      final @NonNull Map<Integer, Node> swNumToOriginalNode,
+      final @NonNull Class<T> clazz,
+      final @NonNull ShortestPathCreator<T> shortestPathCreator, final int src) {
+    super(swNumToNode, swNumToOriginalNode, clazz, shortestPathCreator);
+    this.src = src;
   }
 
-  @Nullable
-  public ShortestPath getShortestPath(final int dstSwNum) {
+  public long getCost(final int dstSwNum) {
     final Node dstNode = swNumToNode.get(dstSwNum);
-    return dstNode == null ? null : dstNode.buildShortestPath(swNumToOriginalNode);
+    if (dstNode == null) {
+      return Long.MAX_VALUE;
+    }
+    return dstNode.getDistance();
+  }
+
+  @Override
+  protected List<Edge> buildEdges(final Node node) {
+    return node.buildPath();
+  }
+
+  @Override
+  protected T buildShortestPath(final Node node) {
+    return node.buildShortestPath(clazz, shortestPathCreator, swNumToOriginalNode);
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    final ShortestPathsTree<?> that = (ShortestPathsTree<?>) o;
+
+    return src == that.src;
+  }
+
+  @Override
+  public int hashCode() {
+    return src;
   }
 }
 

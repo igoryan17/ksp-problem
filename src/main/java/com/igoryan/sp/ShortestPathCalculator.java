@@ -1,20 +1,15 @@
 package com.igoryan.sp;
 
 import com.google.common.graph.Network;
-import com.igoryan.model.Edge;
 import com.igoryan.model.Node;
 import com.igoryan.model.ParallelEdges;
 import com.igoryan.model.ShortestPath;
-import java.util.List;
+import com.igoryan.model.ShortestPathCreator;
 
 public interface ShortestPathCalculator {
 
   void calculate(Node src, Node dst, Network<Node, ParallelEdges> network);
 
-  ShortestPath calculateShortestPath(Node src, Node dst, Network<Node, ParallelEdges> network, boolean cache);
-
-  List<Edge> calculatePath(Node src, Node dst, Network<Node, ParallelEdges> network,
-      final boolean cache);
-
-  void clear();
+  <T extends ShortestPath> T calculate(Class<T> type, Node src, Node dst,
+      Network<Node, ParallelEdges> network, ShortestPathCreator<T> shortestPathCreator);
 }
