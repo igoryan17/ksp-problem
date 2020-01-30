@@ -1,7 +1,9 @@
-package com.igoryan.model;
+package com.igoryan.model.network;
 
 import static java.util.Collections.emptyList;
 
+import com.igoryan.model.path.ShortestPath;
+import com.igoryan.model.path.ShortestPathCreator;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;

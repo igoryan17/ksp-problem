@@ -1,6 +1,6 @@
 package com.igoryan.ksp.impl;
 
-import com.igoryan.model.YenShortestPath;
+import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.sp.impl.DijkstraShortestPathCalculator;
 import org.junit.Before;
 

@@ -1,9 +1,14 @@
-package com.igoryan.model;
+package com.igoryan.model.path;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
+import com.google.common.graph.EndpointPair;
+import com.igoryan.model.network.Edge;
+import com.igoryan.model.network.EdgeCostRetriever;
+import com.igoryan.model.network.Node;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
@@ -21,6 +26,7 @@ public class ShortestPath {
   protected final long cost;
   protected final EdgeCostRetriever edgeCostRetriever;
 
+  protected final transient List<EndpointPair<Node>> incidentNodesOfEdgeCache;
   protected final transient long[] edgesCostCache;
 
   public ShortestPath(final @NonNull Node src, final @NonNull Node dst,
@@ -41,6 +47,7 @@ public class ShortestPath {
     this.cost = cost;
     this.edgesCostCache = new long[edges.size()];
     this.edgesCostCache[0] = edges.get(0).getCost();
+    this.incidentNodesOfEdgeCache = new ArrayList<>();
   }
 
   public ShortestPath(final @NonNull Node src, final @NonNull Node dst,
@@ -61,6 +68,7 @@ public class ShortestPath {
     this.nodes = unmodifiableList(nodes);
     this.cost = cost;
     this.edgesCostCache = edgesCostCache;
+    this.incidentNodesOfEdgeCache = new ArrayList<>();
   }
 
   public ShortestPath(final @NonNull Node srcAndDst,
@@ -72,6 +80,17 @@ public class ShortestPath {
     this.nodes = singletonList(srcAndDst);
     this.edgesCostCache = new long[0];
     this.cost = 0;
+    this.incidentNodesOfEdgeCache = emptyList();
+  }
+
+  public EndpointPair<Node> getIncidentNodes(int i) {
+    EndpointPair<Node> result =
+        i < incidentNodesOfEdgeCache.size() ? incidentNodesOfEdgeCache.get(i) : null;
+    if (result == null) {
+      result = EndpointPair.ordered(nodes.get(i), nodes.get(i + 1));
+      incidentNodesOfEdgeCache.add(i, result);
+    }
+    return result;
   }
 
   public long getEdgesCost(int edgesCount) {

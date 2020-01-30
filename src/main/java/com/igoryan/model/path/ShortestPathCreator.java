@@ -1,5 +1,7 @@
-package com.igoryan.model;
+package com.igoryan.model.path;
 
+import com.igoryan.model.network.Edge;
+import com.igoryan.model.network.Node;
 import java.util.List;
 import lombok.NonNull;
 

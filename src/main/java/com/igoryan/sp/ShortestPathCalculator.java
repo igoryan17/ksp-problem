@@ -1,10 +1,10 @@
 package com.igoryan.sp;
 
 import com.google.common.graph.Network;
-import com.igoryan.model.Node;
-import com.igoryan.model.ParallelEdges;
-import com.igoryan.model.ShortestPath;
-import com.igoryan.model.ShortestPathCreator;
+import com.igoryan.model.network.Node;
+import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.path.ShortestPath;
+import com.igoryan.model.path.ShortestPathCreator;
 
 public interface ShortestPathCalculator {
 

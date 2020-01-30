@@ -1,4 +1,4 @@
-package com.igoryan.model;
+package com.igoryan.model.network;
 
 @FunctionalInterface
 public interface EdgeCostRetriever {

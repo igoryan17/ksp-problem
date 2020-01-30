@@ -1,4 +1,4 @@
-package com.igoryan.model;
+package com.igoryan.model.network;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

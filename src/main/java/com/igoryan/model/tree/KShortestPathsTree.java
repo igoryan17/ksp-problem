@@ -1,5 +1,7 @@
-package com.igoryan.model;
+package com.igoryan.model.tree;
 
+import com.igoryan.model.path.MpsShortestPath;
+import com.igoryan.model.network.NodeEdgeTuple;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;

@@ -1,7 +1,10 @@
-package com.igoryan.model;
+package com.igoryan.model.path;
 
 import static java.util.Collections.singletonMap;
 
+import com.igoryan.model.network.Edge;
+import com.igoryan.model.network.Node;
+import com.igoryan.model.network.NodeEdgeTuple;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -208,6 +211,8 @@ public class MpsShortestPath extends ShortestPath {
         final @NonNull Map<Integer, Node> swNumToOriginalNode) {
       assert !edges.isEmpty();
       assert edges.get(0).getSrcSwNum() == dst.getSwNum();
+      this.dst = Objects
+          .requireNonNull(swNumToOriginalNode.get(edges.get(edges.size() - 1).getDstSwNum()));
       this.edges.addAll(edges);
       edges.forEach(edge -> this.nodes
           .add(Objects.requireNonNull(swNumToOriginalNode.get(edge.getDstSwNum()))));
