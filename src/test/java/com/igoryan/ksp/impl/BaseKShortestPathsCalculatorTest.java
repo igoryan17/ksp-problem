@@ -1,12 +1,12 @@
 package com.igoryan.ksp.impl;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import com.google.common.graph.MutableNetwork;
-import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.Edge;
@@ -145,5 +145,35 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
     final List<T> calculated = kShortestPathsCalculator.calculate(src, dst, network, 8);
 
     assertThat(calculated, hasSize(8));
+    assertThat(calculated.get(0).getEdges(),
+        contains(fromSrcToTransit1Cost1, fromTransit1ToDst.peek()));
+    assertThat(calculated.get(1).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.peek()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.peek())));
+    assertThat(calculated.get(2).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.peek()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.peek())));
+    assertThat(calculated.get(3).getEdges(),
+        contains(fromSrcToTransit2Cost2, fromTransit2ToDst.peek()));
+    assertThat(calculated.get(4).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+    ));
+    assertThat(calculated.get(5).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+    ));
+    assertThat(calculated.get(6).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
+        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+    ));
+    assertThat(calculated.get(7).getEdges(), anyOf(
+        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
+        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+    ));
+
+    final List<T> calculatedWithMoreThanAvailable =
+        kShortestPathsCalculator.calculate(src, dst, network, 10);
+    assertThat(calculatedWithMoreThanAvailable, hasSize(8));
   }
 }

@@ -208,6 +208,8 @@ public class MpsShortestPath extends ShortestPath {
         final @NonNull Map<Integer, Node> swNumToOriginalNode) {
       assert !edges.isEmpty();
       assert edges.get(0).getSrcSwNum() == dst.getSwNum();
+      this.dst = Objects
+          .requireNonNull(swNumToOriginalNode.get(edges.get(edges.size() - 1).getDstSwNum()));
       this.edges.addAll(edges);
       edges.forEach(edge -> this.nodes
           .add(Objects.requireNonNull(swNumToOriginalNode.get(edge.getDstSwNum()))));
