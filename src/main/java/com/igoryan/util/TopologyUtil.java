@@ -1,4 +1,4 @@
-package com.igoryan.network;
+package com.igoryan.util;
 
 public final class TopologyUtil {
 

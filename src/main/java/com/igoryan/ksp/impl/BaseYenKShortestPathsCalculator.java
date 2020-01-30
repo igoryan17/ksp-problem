@@ -4,15 +4,15 @@ import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.igoryan.ksp.KShortestPathsCalculator;
-import com.igoryan.model.Edge;
-import com.igoryan.model.Node;
-import com.igoryan.model.ParallelEdges;
-import com.igoryan.model.ShortestPath;
-import com.igoryan.model.ShortestPathCreator;
-import com.igoryan.model.ShortestPathsTree;
-import com.igoryan.model.YenShortestPath;
+import com.igoryan.model.network.Edge;
+import com.igoryan.model.network.Node;
+import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.path.ShortestPath;
+import com.igoryan.model.path.ShortestPathCreator;
+import com.igoryan.model.tree.ShortestPathsTree;
+import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
-import com.igoryan.sp.util.ShortestPathsUtil;
+import com.igoryan.util.ShortestPathsUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class BaseYenKShortestPathsCalculator
+abstract class BaseYenKShortestPathsCalculator
     implements KShortestPathsCalculator<YenShortestPath> {
 
   protected static final ShortestPathCreator<YenShortestPath> SHORTEST_PATH_CREATOR =

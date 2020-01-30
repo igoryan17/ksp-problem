@@ -1,4 +1,4 @@
-package com.igoryan.model;
+package com.igoryan.model.network;
 
 import java.util.Collection;
 import java.util.Comparator;

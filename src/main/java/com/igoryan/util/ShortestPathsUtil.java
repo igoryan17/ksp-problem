@@ -1,13 +1,13 @@
-package com.igoryan.sp.util;
+package com.igoryan.util;
 
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
-import com.igoryan.model.Node;
-import com.igoryan.model.ParallelEdges;
-import com.igoryan.model.ReversedShortestPathTree;
-import com.igoryan.model.ShortestPath;
-import com.igoryan.model.ShortestPathCreator;
-import com.igoryan.model.ShortestPathsTree;
+import com.igoryan.model.network.Node;
+import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.tree.ReversedShortestPathTree;
+import com.igoryan.model.path.ShortestPath;
+import com.igoryan.model.path.ShortestPathCreator;
+import com.igoryan.model.tree.ShortestPathsTree;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;

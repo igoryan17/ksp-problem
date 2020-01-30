@@ -1,10 +1,13 @@
-package com.igoryan.model;
+package com.igoryan.model.path;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
 import com.google.common.graph.EndpointPair;
+import com.igoryan.model.network.Edge;
+import com.igoryan.model.network.EdgeCostRetriever;
+import com.igoryan.model.network.Node;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
