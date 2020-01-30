@@ -6,24 +6,14 @@ import com.google.common.graph.Network;
 import com.igoryan.model.Edge;
 import com.igoryan.model.Node;
 import com.igoryan.model.ParallelEdges;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 
-public class DijkstraShortestPathCalculatorWithNoTransit extends BaseDijkstraShortestPathCalculator {
+public class DijkstraShortestPathCalculatorWithNoTransit
+    extends BaseDijkstraShortestPathCalculator {
 
   private Set<Node> transitNodes;
-
-  @Override
-  protected void init(final Node src, final Network<Node, ParallelEdges> network) {
-    network.nodes().forEach(node -> {
-      node.setEdgePredecessor(null);
-      node.setNodePredecessor(null);
-      node.setDistance(Long.MAX_VALUE);
-    });
-    src.setDistance(0);
-  }
 
   @Override
   protected void relaxation(final Node u, final Node v, final ParallelEdges parallelEdges,
@@ -58,18 +48,7 @@ public class DijkstraShortestPathCalculatorWithNoTransit extends BaseDijkstraSho
       src.setTransit(true);
       queue.add(src);
     }
-    final Set<Node> visitedNodes = new HashSet<>();
-    while (!queue.isEmpty()) {
-      final Node u = queue.poll();
-      visitedNodes.add(u);
-      for (final ParallelEdges outEdge : network.outEdges(u)) {
-        final Node v = network.incidentNodes(outEdge).target();
-        if (visitedNodes.contains(v)) {
-          continue;
-        }
-        relaxation(u, v, outEdge, queue);
-      }
-    }
+    performDijkstra(network, queue);
     src.setTransit(srcIsTransit);
   }
 }

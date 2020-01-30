@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import com.google.common.graph.MutableNetwork;
+import com.google.common.graph.Network;
 import com.google.common.graph.NetworkBuilder;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.Edge;
@@ -91,5 +92,58 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
 
     assertThat(result.get(1).getOriginalCost(), is(3L));
     assertThat(result.get(1).getEdges(), contains(fromSrcToTransit, secondFromTransitToSource));
+  }
+
+  @Test
+  public void testWIthCycle() {
+    final Node src = new Node(1, true);
+    final Node transit1 = new Node(2, true);
+    final Node transit2 = new Node(3, true);
+    final Node dst = new Node(4, true);
+
+    final ParallelEdges fromSrcToTransit1 = new ParallelEdges(1, 2, 2);
+    final Edge fromSrcToTransit1Cost1 = new Edge(1, 2, (short) 1, (short) 1, 1L);
+    final Edge fromSrcToTransit1Cost2 = new Edge(1, 2, (short) 2, (short) 2, 2L);
+    fromSrcToTransit1.add(fromSrcToTransit1Cost1);
+    fromSrcToTransit1.add(fromSrcToTransit1Cost2);
+
+    final ParallelEdges fromSrcToTransit2 = new ParallelEdges(1, 3, 2);
+    final Edge fromSrcToTransit2Cost1 = new Edge(1, 3, (short) 3, (short) 1, 1L);
+    final Edge fromSrcToTransit2Cost2 = new Edge(1, 3, (short) 4, (short) 2, 2L);
+    fromSrcToTransit2.add(fromSrcToTransit2Cost1);
+    fromSrcToTransit2.add(fromSrcToTransit2Cost2);
+
+    final ParallelEdges fromTransit1ToTransit2 = new ParallelEdges(2, 3, 1);
+    fromTransit1ToTransit2.add(new Edge(2, 3, (short) 3, (short) 3, 5L));
+
+    final ParallelEdges fromTransit2ToTransit1 = new ParallelEdges(3, 2, 1);
+    fromTransit2ToTransit1.add(new Edge(3, 2, (short) 4, (short) 4, 6L));
+
+    final ParallelEdges fromTransit1ToDst = new ParallelEdges(2, 4, 1);
+    fromTransit1ToDst.add(new Edge(2, 4, (short) 4, (short) 1, 3L));
+
+    final ParallelEdges fromTransit2ToDst = new ParallelEdges(3, 4, 1);
+    fromTransit2ToDst.add(new Edge(3, 4, (short) 5, (short) 2, 4L));
+
+    final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
+        .expectedNodeCount(4)
+        .expectedEdgeCount(6)
+        .build();
+
+    network.addNode(src);
+    network.addNode(transit1);
+    network.addNode(transit2);
+    network.addNode(dst);
+
+    network.addEdge(src, transit1, fromSrcToTransit1);
+    network.addEdge(src, transit2, fromSrcToTransit2);
+    network.addEdge(transit1, transit2, fromTransit1ToTransit2);
+    network.addEdge(transit2, transit1, fromTransit2ToTransit1);
+    network.addEdge(transit1, dst, fromTransit1ToDst);
+    network.addEdge(transit2, dst, fromTransit2ToDst);
+
+    final List<T> calculated = kShortestPathsCalculator.calculate(src, dst, network, 8);
+
+    assertThat(calculated, hasSize(8));
   }
 }

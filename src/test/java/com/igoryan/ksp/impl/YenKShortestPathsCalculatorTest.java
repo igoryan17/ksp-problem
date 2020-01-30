@@ -9,9 +9,7 @@ public class YenKShortestPathsCalculatorTest
 
   @Before
   public void setUp() throws Exception {
-    shortestPathCalculator =
-        new DijkstraShortestPathCalculator();
-    kShortestPathsCalculator =
-        new YenKShortestPathsCalculator(shortestPathCalculator);
+    shortestPathCalculator = new DijkstraShortestPathCalculator();
+    kShortestPathsCalculator = new YenKShortestPathsCalculator(shortestPathCalculator);
   }
 }

@@ -22,6 +22,9 @@ public final class Node {
   private boolean isTransit;
   @Getter
   @Setter
+  private boolean isVisited;
+  @Getter
+  @Setter
   private long distance;
   @Getter
   @Setter
