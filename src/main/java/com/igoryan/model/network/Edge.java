@@ -10,9 +10,9 @@ public final class Edge {
   @Getter
   private final int srcSwNum;
   @Getter
-  private final int dstSwNum;
-  @Getter
   private final short srcPort;
+  @Getter
+  private final int dstSwNum;
   @Getter
   private final short dstPort;
   @Getter

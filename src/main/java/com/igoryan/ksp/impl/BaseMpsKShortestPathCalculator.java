@@ -60,8 +60,8 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
         final Node targetNode = network.incidentNodes(parallelEdges).target();
         swNumToNode.put(targetNode.getSwNum(), targetNode);
         for (Edge edge : parallelEdges) {
-          final long costFromHead = shortestPathTree.getCost(edge.getDstSwNum());
-          final long costFromTail = shortestPathTree.getCost(edge.getSrcSwNum());
+          final long costFromHead = shortestPathTree.getCostOrInfinity(edge.getDstSwNum());
+          final long costFromTail = shortestPathTree.getCostOrInfinity(edge.getSrcSwNum());
           if (Long.MAX_VALUE == costFromHead || Long.MAX_VALUE == costFromTail) {
             edge.setReducedCost(Long.MAX_VALUE);
             continue;

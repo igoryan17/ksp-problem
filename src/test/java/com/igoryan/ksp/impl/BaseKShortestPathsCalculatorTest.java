@@ -32,8 +32,8 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
   public void twoNodesWithTwoEdges() {
     final Node src = new Node(1, true);
     final Node dst = new Node(2, true);
-    final Edge firstEdge = new Edge(1, 2, (short) 1, (short) 1, 1L);
-    final Edge secondEdge = new Edge(1, 2, (short) 2, (short) 2, 2L);
+    final Edge firstEdge = new Edge(1, (short) 1, 2, (short) 1, 1L);
+    final Edge secondEdge = new Edge(1, (short) 2, 2, (short) 2, 2L);
     final ParallelEdges parallelEdges = new ParallelEdges(1, 2, 2);
     parallelEdges.add(firstEdge);
     parallelEdges.add(secondEdge);
@@ -60,12 +60,12 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
     final Node transit = new Node(2, true);
     final Node dst = new Node(3, true);
 
-    final Edge fromSrcToTransit = new Edge(1, 2, (short) 1, (short) 1, 1L);
+    final Edge fromSrcToTransit = new Edge(1, (short) 1, 2, (short) 1, 1L);
     final ParallelEdges fromSrcToTransitEdges = new ParallelEdges(1, 2, 1);
     fromSrcToTransitEdges.add(fromSrcToTransit);
 
-    final Edge firstFromTransitToSource = new Edge(2, 3, (short) 2, (short) 1, 1L);
-    final Edge secondFromTransitToSource = new Edge(2, 3, (short) 3, (short) 2, 2L);
+    final Edge firstFromTransitToSource = new Edge(2, (short) 2, 3, (short) 1, 1L);
+    final Edge secondFromTransitToSource = new Edge(2, (short) 3, 3, (short) 2, 2L);
     final ParallelEdges fromTransitToDstEdges = new ParallelEdges(2, 3, 2);
     fromTransitToDstEdges.add(firstFromTransitToSource);
     fromTransitToDstEdges.add(secondFromTransitToSource);
@@ -102,28 +102,28 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
     final Node dst = new Node(4, true);
 
     final ParallelEdges fromSrcToTransit1 = new ParallelEdges(1, 2, 2);
-    final Edge fromSrcToTransit1Cost1 = new Edge(1, 2, (short) 1, (short) 1, 1L);
-    final Edge fromSrcToTransit1Cost2 = new Edge(1, 2, (short) 2, (short) 2, 2L);
+    final Edge fromSrcToTransit1Cost1 = new Edge(1, (short) 1, 2, (short) 1, 1L);
+    final Edge fromSrcToTransit1Cost2 = new Edge(1, (short) 2, 2, (short) 2, 2L);
     fromSrcToTransit1.add(fromSrcToTransit1Cost1);
     fromSrcToTransit1.add(fromSrcToTransit1Cost2);
 
     final ParallelEdges fromSrcToTransit2 = new ParallelEdges(1, 3, 2);
-    final Edge fromSrcToTransit2Cost1 = new Edge(1, 3, (short) 3, (short) 1, 1L);
-    final Edge fromSrcToTransit2Cost2 = new Edge(1, 3, (short) 4, (short) 2, 2L);
+    final Edge fromSrcToTransit2Cost1 = new Edge(1, (short) 3, 3, (short) 1, 1L);
+    final Edge fromSrcToTransit2Cost2 = new Edge(1, (short) 4, 3, (short) 2, 2L);
     fromSrcToTransit2.add(fromSrcToTransit2Cost1);
     fromSrcToTransit2.add(fromSrcToTransit2Cost2);
 
     final ParallelEdges fromTransit1ToTransit2 = new ParallelEdges(2, 3, 1);
-    fromTransit1ToTransit2.add(new Edge(2, 3, (short) 3, (short) 3, 5L));
+    fromTransit1ToTransit2.add(new Edge(2, (short) 3, 3, (short) 3, 5L));
 
     final ParallelEdges fromTransit2ToTransit1 = new ParallelEdges(3, 2, 1);
-    fromTransit2ToTransit1.add(new Edge(3, 2, (short) 4, (short) 4, 6L));
+    fromTransit2ToTransit1.add(new Edge(3, (short) 4, 2, (short) 4, 6L));
 
     final ParallelEdges fromTransit1ToDst = new ParallelEdges(2, 4, 1);
-    fromTransit1ToDst.add(new Edge(2, 4, (short) 4, (short) 1, 3L));
+    fromTransit1ToDst.add(new Edge(2, (short) 4, 4, (short) 1, 3L));
 
     final ParallelEdges fromTransit2ToDst = new ParallelEdges(3, 4, 1);
-    fromTransit2ToDst.add(new Edge(3, 4, (short) 5, (short) 2, 4L));
+    fromTransit2ToDst.add(new Edge(3, (short) 5, 4, (short) 2, 4L));
 
     final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
         .expectedNodeCount(4)

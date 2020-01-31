@@ -12,4 +12,6 @@ public interface ShortestPathCalculator {
 
   <T extends ShortestPath> T calculate(Class<T> type, Node src, Node dst,
       Network<Node, ParallelEdges> network, ShortestPathCreator<T> shortestPathCreator);
+
+  default void clear() {}
 }

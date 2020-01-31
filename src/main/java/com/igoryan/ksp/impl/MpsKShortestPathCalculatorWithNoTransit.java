@@ -15,12 +15,12 @@ import com.igoryan.sp.ShortestPathCalculator;
 import java.util.List;
 import lombok.NonNull;
 
-public final class MpsShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
+public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
 
   private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
 
   @Inject
-  public MpsShortestPathCalculatorWithNoTransit(
+  public MpsKShortestPathCalculatorWithNoTransit(
       final ShortestPathCalculator shortestPathCalculator) {
     super(shortestPathCalculator);
   }

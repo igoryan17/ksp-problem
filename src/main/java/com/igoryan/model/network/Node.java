@@ -103,7 +103,8 @@ public final class Node {
     Node temp = this;
     while (temp.getNodePredecessor() != null) {
       edges.addFirst(temp.getEdgePredecessor());
-      nodes.addFirst(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum())));
+      nodes.addFirst(Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()),
+          "there is not mapping to original node; swNum:" + temp.getSwNum()));
       temp = temp.getNodePredecessor();
     }
     final Node src = Objects.requireNonNull(swNumToOriginalNode.get(temp.getSwNum()));
@@ -149,5 +150,16 @@ public final class Node {
   @Override
   public int hashCode() {
     return swNum;
+  }
+
+  @Override
+  public String toString() {
+    return "Node{" +
+        "swNum=" + swNum +
+        ", isTransit=" + isTransit +
+        ", isVisited=" + isVisited +
+        ", distance=" + distance +
+        ", edgePredecessor=" + edgePredecessor +
+        '}';
   }
 }

@@ -20,7 +20,7 @@ public class ShortestPathsTree<T extends ShortestPath> extends BaseShortestPaths
     this.src = src;
   }
 
-  public long getCost(final int dstSwNum) {
+  public long getCostOrInfinity(final int dstSwNum) {
     final Node dstNode = swNumToNode.get(dstSwNum);
     if (dstNode == null) {
       return Long.MAX_VALUE;

@@ -8,31 +8,33 @@ import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.path.ShortestPath;
+import com.igoryan.sp.ShortestPathCalculator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-abstract class AllPairsCalculatorImpl implements AllPairsCalculator {
+abstract class BaseAllPairsCalculator implements AllPairsCalculator {
 
   private final KShortestPathsCalculator<? extends ShortestPath> kShortestPathsCalculator;
+  private final ShortestPathCalculator shortestPathCalculator;
 
-  protected AllPairsCalculatorImpl(
-      final KShortestPathsCalculator<? extends ShortestPath> kShortestPathsCalculator) {
+  protected BaseAllPairsCalculator(
+      final KShortestPathsCalculator<? extends ShortestPath> kShortestPathsCalculator,
+      final ShortestPathCalculator shortestPathCalculator) {
     this.kShortestPathsCalculator = kShortestPathsCalculator;
+    this.shortestPathCalculator = shortestPathCalculator;
   }
 
   @Override
   public Map<EndpointPair<Node>, List<? extends ShortestPath>> calculate(
       final MutableNetwork<Node, ParallelEdges> network, final int PerPairCount) {
     final Map<EndpointPair<Node>, List<? extends ShortestPath>> result = new HashMap<>();
-    try {
-      buildAllPairs(network).forEach(endpointPairs -> endpointPairs.forEach(endPointPair -> {
-        result.put(endPointPair, kShortestPathsCalculator
-            .calculate(endPointPair.source(), endPointPair.target(), network, PerPairCount));
-      }));
-    } finally {
-      kShortestPathsCalculator.clear();
-    }
+    buildAllPairs(network).forEach(endpointPairs -> endpointPairs.forEach(endPointPair -> {
+      result.put(endPointPair, kShortestPathsCalculator
+          .calculate(endPointPair.source(), endPointPair.target(), network, PerPairCount));
+    }));
+    shortestPathCalculator.clear();
+    kShortestPathsCalculator.clear();
     return result;
   }
 

@@ -19,7 +19,8 @@ public class DijkstraShortestPathCalculatorWithNoTransit
   protected void relaxation(final Node u, final Node v, final ParallelEdges parallelEdges,
       final PriorityQueue<Node> queue) {
     final Edge edge = Objects.requireNonNull(parallelEdges.peek());
-    final long fromUToV = u.getDistance() + edge.getCost();
+    final long fromUToV =
+        u.getDistance() < Long.MAX_VALUE ? u.getDistance() + edge.getCost() : Long.MAX_VALUE;
     if (fromUToV < v.getDistance()) {
       if (v.isTransit()) {
         queue.remove(v);
@@ -50,5 +51,10 @@ public class DijkstraShortestPathCalculatorWithNoTransit
     }
     performDijkstra(network, queue);
     src.setTransit(srcIsTransit);
+  }
+
+  @Override
+  public void clear() {
+    transitNodes = null;
   }
 }

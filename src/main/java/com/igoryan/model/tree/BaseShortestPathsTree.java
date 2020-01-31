@@ -9,7 +9,6 @@ import com.igoryan.model.path.ShortestPathCreator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
@@ -35,8 +34,9 @@ public abstract class BaseShortestPathsTree<T extends ShortestPath> {
     this.shortestPathCreator = shortestPathCreator;
   }
 
-  public long getCost(final int swNum) {
-    return Objects.requireNonNull(swNumToNode.get(swNum)).getDistance();
+  public long getCostOrInfinity(final int swNum) {
+    final Node node = swNumToNode.get(swNum);
+    return node == null ? Long.MAX_VALUE : node.getDistance();
   }
 
   protected abstract List<Edge> buildEdges(final Node node);
