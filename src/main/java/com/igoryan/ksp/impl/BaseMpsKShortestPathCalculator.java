@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.Set;
+import java.util.TreeSet;
 
 abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculator<MpsShortestPath> {
 
@@ -59,6 +61,9 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
     if (firstShortestPath == null) {
       return emptyList();
     }
+    network.edges().stream()
+        .flatMap(ParallelEdges::stream)
+        .forEach(edge -> edge.setWasDeviation(false));
     candidates.add(firstShortestPath);
     int currentCount = 0;
     final List<MpsShortestPath> result = new ArrayList<>();
@@ -82,16 +87,22 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
         deviationNode = shortestPath.getNodes().get(nodeIndex);
         final SortedParallelEdges sortedParallelEdges =
             cachedEdgesStructure.get(deviationNode.getSwNum());
-        final List<Edge> parallelEdges = sortedParallelEdges.getSortedEdges();
         toDeviationNode = shortestPath.subPath(nodeIndex);
+        if (sortedParallelEdges == null) {
+          nodeIndex++;
+          continue;
+        }
+        final TreeSet<Edge> parallelEdges = sortedParallelEdges.getSortedEdges();
         Edge deviationEdge = null;
-        for (int i = sortedParallelEdges.getIndex(shortestPath.getEdges().get(nodeIndex)) + 1;
-            i < parallelEdges.size(); i++) {
-          final Edge edge = parallelEdges.get(i);
+        for (Edge edge : parallelEdges.tailSet(shortestPath.getEdges().get(nodeIndex), false)) {
           if (toDeviationNode.formsCycle(edge)) {
             continue;
           }
           deviationEdge = edge;
+          // update value for search tree
+          parallelEdges.remove(deviationEdge);
+          deviationEdge.setWasDeviation(true);
+          parallelEdges.add(deviationEdge);
           break;
         }
         if (deviationEdge == null) {
@@ -106,18 +117,18 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
           nodeIndex++;
           continue;
         }
-        final List<Edge> fromHeadOfDeviationNodeToDst =
+        final List<Edge> fromHeadOfDeviationEdgeToDst =
             shortestPathTree.getPath(deviationEdge.getDstSwNum());
-        if (fromHeadOfDeviationNodeToDst != null) {
+        if (fromHeadOfDeviationEdgeToDst != null) {
           candidates.add(builder
               .append(deviationEdge, targetNodeOfDeviationEdge)
-              .append(fromHeadOfDeviationNodeToDst, shortestPathTree.getSwNumToOriginalNode())
+              .append(fromHeadOfDeviationEdgeToDst, shortestPathTree.getSwNumToOriginalNode())
               .build()
           );
         }
         nodeIndex++;
       } while (Objects.requireNonNull(toDeviationNode).withoutLoops()
-          && nodeIndex != indexOfTarget);
+          && nodeIndex < indexOfTarget);
     }
     return result;
   }
@@ -126,10 +137,14 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
       final MutableNetwork<Node, ParallelEdges> network,
       final ReversedShortestPathTree<MpsShortestPath> shortestPathTree) {
     final Map<Integer, SortedParallelEdges> edgesStructure = new HashMap<>(network.nodes().size());
-    network.nodes().forEach(node -> {
+    for (Node node : network.nodes()) {
+      final Set<ParallelEdges> outEdges = network.outEdges(node);
+      if (outEdges.isEmpty()) {
+        continue;
+      }
       final List<Edge> notSortedEdges = new ArrayList<>();
       final Map<Integer, Node> swNumToNode = new HashMap<>();
-      network.outEdges(node).forEach(parallelEdges -> {
+      outEdges.forEach(parallelEdges -> {
         final Node targetNode = network.incidentNodes(parallelEdges).target();
         swNumToNode.put(targetNode.getSwNum(), targetNode);
         for (Edge edge : parallelEdges) {
@@ -143,10 +158,12 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
           notSortedEdges.add(edge);
         }
       });
-      edgesStructure
-          .put(node.getSwNum(),
-              new SortedParallelEdges(node.getSwNum(), swNumToNode, notSortedEdges));
-    });
+      if (notSortedEdges.isEmpty()) {
+        continue;
+      }
+      edgesStructure.put(node.getSwNum(),
+          new SortedParallelEdges(node.getSwNum(), swNumToNode, notSortedEdges));
+    }
     return edgesStructure;
   }
 

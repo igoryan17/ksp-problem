@@ -3,8 +3,8 @@ package com.igoryan.ksp.impl;
 import static com.igoryan.util.ShortestPathsUtil.addNodeToTransitSubGraph;
 import static com.igoryan.util.ShortestPathsUtil.removeNodeFromTransitSubGraph;
 import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTransit;
+import static java.util.Collections.singletonMap;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
@@ -43,8 +43,10 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
         getOrCalculateShortestPathTree(src, dst, Graphs.transpose(network));
     final boolean dstChanged = lastDst != dst;
     if (dstChanged) {
-      removeInEdgesFromStructure(lastDst);
-      removeNodeFromTransitSubGraph(lastDst, subNetworkExpectOutEdgesOfNoTransit);
+      if (lastDst != null) {
+        removeInEdgesFromStructure(lastDst);
+        removeNodeFromTransitSubGraph(lastDst, subNetworkExpectOutEdgesOfNoTransit);
+      }
       lastDst = dst;
       cachedEdgesStructure = buildEdgesStructure(network, shortestPathTree);
       addNodeToTransitSubGraph(dst, subNetworkExpectOutEdgesOfNoTransit, network);
@@ -63,14 +65,13 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
           cachedEdgesStructure.get(endpointPair.nodeU());
       if (sortedParallelEdges == null) {
         final Integer swNumOfSrc = endpointPair.source().getSwNum();
-        final Map<Integer, Node> swNumToNode = ImmutableMap
-            .of(swNumOfSrc, endpointPair.source(), dst.getSwNum(), dst);
+        final Map<Integer, Node> swNumToNode = singletonMap(dst.getSwNum(), dst);
         cachedEdgesStructure
             .put(swNumOfSrc,
                 new SortedParallelEdges(swNumOfSrc, swNumToNode, new ArrayList<>(parallelEdges)));
         continue;
       }
-      sortedParallelEdges.addAll(parallelEdges);
+      sortedParallelEdges.addAll(parallelEdges, dst);
     }
   }
 
@@ -82,7 +83,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       final Integer swNumOfSrc = endpointPair.source().getSwNum();
       final SortedParallelEdges sortedParallelEdges =
           Objects.requireNonNull(cachedEdgesStructure.get(swNumOfSrc));
-      sortedParallelEdges.removeAll(parallelEdges);
+      sortedParallelEdges.removeAll(parallelEdges, dst);
       if (sortedParallelEdges.getSortedEdges().isEmpty()) {
         cachedEdgesStructure.remove(swNumOfSrc);
       }

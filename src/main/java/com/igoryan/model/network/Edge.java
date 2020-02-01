@@ -20,6 +20,9 @@ public final class Edge {
   @Getter
   @Setter
   private transient long reducedCost;
+  @Getter
+  @Setter
+  private transient boolean wasDeviation;
   private transient int hash;
 
   @Override
