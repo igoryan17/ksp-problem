@@ -15,7 +15,7 @@ public final class SortedParallelEdges {
 
   private static final Comparator<Edge> COMPARE_EDGES_BY_REDUCED_COST =
       Comparator.comparingLong(Edge::getReducedCost)
-          .thenComparingInt(Edge::getSrcPort);
+          .thenComparingInt(Edge::getSrcPort).thenComparingInt(Edge::getDstPort);
 
   private final int srcSwNum;
 
@@ -43,7 +43,6 @@ public final class SortedParallelEdges {
 
   public void removeAll(final @NonNull Collection<Edge> edges, final @NonNull Node dst) {
     sortedEdges.removeAll(edges);
-    swNumToNode.remove(dst.getSwNum());
   }
 
   public Node getTargetNode(final @NonNull Edge edge) {

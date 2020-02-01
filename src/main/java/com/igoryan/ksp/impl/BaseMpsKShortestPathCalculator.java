@@ -61,9 +61,6 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
     if (firstShortestPath == null) {
       return emptyList();
     }
-    network.edges().stream()
-        .flatMap(ParallelEdges::stream)
-        .forEach(edge -> edge.setWasDeviation(false));
     candidates.add(firstShortestPath);
     int currentCount = 0;
     final List<MpsShortestPath> result = new ArrayList<>();
@@ -99,10 +96,6 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
             continue;
           }
           deviationEdge = edge;
-          // update value for search tree
-          parallelEdges.remove(deviationEdge);
-          deviationEdge.setWasDeviation(true);
-          parallelEdges.add(deviationEdge);
           break;
         }
         if (deviationEdge == null) {
