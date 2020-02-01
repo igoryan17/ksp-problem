@@ -1,5 +1,6 @@
 package com.igoryan.util;
 
+import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.igoryan.model.network.Node;
@@ -89,15 +90,23 @@ public final class ShortestPathsUtil {
         .collect(Collectors.toSet());
   }
 
+  public static MutableNetwork<Node, ParallelEdges> subNetworkExpectOutEdgesOfNoTransit(final @NonNull
+      MutableNetwork<Node, ParallelEdges> network) {
+    final MutableNetwork<Node, ParallelEdges> result = Graphs.copyOf(network);
+    result.nodes().stream()
+        .filter(node -> !node.isTransit())
+        .forEach(node -> network.outEdges(node).forEach(result::removeEdge));
+    return result;
+  }
+
   public static void addNodeToTransitSubGraph(final @NonNull Node node,
       final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit,
       final @NonNull MutableNetwork<Node, ParallelEdges> network) {
-
     if (node.isTransit()) {
       return;
     }
     subNetworkWithTransit.addNode(node);
-    network.incidentEdges(node)
+    network.inEdges(node)
         .forEach(edge -> subNetworkWithTransit.addEdge(network.incidentNodes(edge), edge));
   }
 
@@ -107,6 +116,6 @@ public final class ShortestPathsUtil {
     if (node.isTransit()) {
       return;
     }
-    subNetworkWithTransit.removeNode(node);
+    subNetworkWithTransit.inEdges(node).forEach(subNetworkWithTransit::removeEdge);
   }
 }

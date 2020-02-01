@@ -21,7 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2(topic = "com.igoryan.benchmark")
 public class App {
 
   private static final String ALGORITHM_PROPERTY = "algorithm";
@@ -105,6 +107,7 @@ public class App {
     }
     while (currentCpeCount < cpeMaxCount) {
       for (int i = 0; i < repeatsCount; i++) {
+        log.info("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
         final MutableNetwork<Node, ParallelEdges> network =
             simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled);
         final Stopwatch stopwatch = Stopwatch.createStarted();
