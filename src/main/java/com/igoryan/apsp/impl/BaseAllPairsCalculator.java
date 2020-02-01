@@ -29,6 +29,7 @@ abstract class BaseAllPairsCalculator implements AllPairsCalculator {
   public Map<EndpointPair<Node>, List<? extends ShortestPath>> calculate(
       final MutableNetwork<Node, ParallelEdges> network, final int PerPairCount) {
     final Map<EndpointPair<Node>, List<? extends ShortestPath>> result = new HashMap<>();
+
     buildAllPairs(network).forEach(endpointPairs -> endpointPairs.forEach(endPointPair -> {
       result.put(endPointPair, kShortestPathsCalculator
           .calculate(endPointPair.source(), endPointPair.target(), network, PerPairCount));

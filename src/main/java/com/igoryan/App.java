@@ -104,7 +104,6 @@ public class App {
       for (int i = 0; i < repeatsCount; i++) {
         final MutableNetwork<Node, ParallelEdges> network =
             simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled);
-        System.out.println(String.format("step number: %d, cpeCount: %d", i, currentCpeCount));
         final Stopwatch stopwatch = Stopwatch.createStarted();
         allPairsCalculator.calculate(network, pathsPerPair);
         stopwatch.stop();

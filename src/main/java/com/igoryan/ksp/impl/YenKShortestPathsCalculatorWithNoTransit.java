@@ -8,6 +8,7 @@ import static java.util.Collections.emptyList;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.path.YenShortestPath;
@@ -15,9 +16,11 @@ import com.igoryan.sp.ShortestPathCalculator;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class YenKShortestPathsCalculatorWithNoTransit extends BaseYenKShortestPathsCalculator {
+@Singleton
+public final class YenKShortestPathsCalculatorWithNoTransit
+    extends BaseYenKShortestPathsCalculator {
 
-  private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
+  private volatile MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
 
   @Inject
   protected YenKShortestPathsCalculatorWithNoTransit(

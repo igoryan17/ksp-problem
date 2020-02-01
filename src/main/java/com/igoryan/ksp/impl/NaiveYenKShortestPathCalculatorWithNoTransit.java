@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.path.YenShortestPath;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 
+@Singleton
 public final class NaiveYenKShortestPathCalculatorWithNoTransit
     extends BaseYenKShortestPathsCalculator {
 

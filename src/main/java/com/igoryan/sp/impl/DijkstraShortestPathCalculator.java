@@ -1,12 +1,14 @@
 package com.igoryan.sp.impl;
 
 import com.google.common.graph.Network;
+import com.google.inject.Singleton;
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
 import java.util.Objects;
 import java.util.PriorityQueue;
 
+@Singleton
 public class DijkstraShortestPathCalculator extends BaseDijkstraShortestPathCalculator {
 
   @Override

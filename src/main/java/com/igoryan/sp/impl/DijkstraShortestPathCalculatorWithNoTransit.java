@@ -3,6 +3,7 @@ package com.igoryan.sp.impl;
 import static com.igoryan.util.ShortestPathsUtil.getTransitNodes;
 
 import com.google.common.graph.Network;
+import com.google.inject.Singleton;
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
@@ -10,10 +11,11 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+@Singleton
 public class DijkstraShortestPathCalculatorWithNoTransit
     extends BaseDijkstraShortestPathCalculator {
 
-  private Set<Node> transitNodes;
+  private Set<Node> transitNodes = null;
 
   @Override
   protected void relaxation(final Node u, final Node v, final ParallelEdges parallelEdges,
@@ -41,7 +43,7 @@ public class DijkstraShortestPathCalculatorWithNoTransit
     final PriorityQueue<Node> queue =
         new PriorityQueue<>(network.nodes().size(), COMPARE_NODES_BY_DISTANCE);
     if (transitNodes == null) {
-      transitNodes = getTransitNodes(network);
+      this.transitNodes = getTransitNodes(network);
     }
     queue.addAll(transitNodes);
     final boolean srcIsTransit = src.isTransit();
@@ -55,6 +57,7 @@ public class DijkstraShortestPathCalculatorWithNoTransit
 
   @Override
   public void clear() {
-    transitNodes = null;
+    super.clear();
+    this.transitNodes = null;
   }
 }

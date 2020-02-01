@@ -3,6 +3,7 @@ package com.igoryan.apsp.impl;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Network;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.NonNull;
 
+@Singleton
 public final class MpsAllPairsCalculator extends BaseAllPairsCalculator {
 
   @Inject

@@ -11,6 +11,7 @@ import com.igoryan.model.tree.ShortestPathsTree;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.NonNull;
@@ -24,7 +25,6 @@ public final class ShortestPathsUtil {
       final @NonNull Class<T> type, final @NonNull Node src,
       final ShortestPathCreator<T> shortestPathCreator,
       final @NonNull Collection<Node> nodes) {
-    System.out.println("build shortest paths tree recursively; src:" + src);
     final Map<Integer, Node> swNumToNodeOfTree = new HashMap<>();
     swNumToNodeOfTree.put(src.getSwNum(), new Node(src, null));
     final Map<Integer, Node> swNumToOriginalNode = new HashMap<>();
@@ -66,15 +66,15 @@ public final class ShortestPathsUtil {
 
   public static void addNode(final @NonNull Node node,
       final @NonNull Map<Integer, Node> swNumToNodeOfTree) {
-    final Node predecessor = node.getNodePredecessor();
-    if (predecessor == null) {
-      // it's source
-      swNumToNodeOfTree.put(node.getSwNum(), new Node(node, null));
-      return;
-    }
+    final Node predecessor = Objects.requireNonNull(node.getNodePredecessor());
     // if predecessor isn't copied than add it recursively max depth of recursion is max hops count
-    if (!swNumToNodeOfTree.containsKey(predecessor.getSwNum())) {
+    Node copiedPredecessor = swNumToNodeOfTree.get(predecessor.getSwNum());
+    if (copiedPredecessor == null) {
       addNode(predecessor, swNumToNodeOfTree);
+    } else {
+      final Node addedNode = new Node(node, copiedPredecessor);
+      swNumToNodeOfTree.put(addedNode.getSwNum(), addedNode);
+      return;
     }
     // get recursively added predecessor
     final Node addedPredecessor = swNumToNodeOfTree.get(predecessor.getSwNum());
