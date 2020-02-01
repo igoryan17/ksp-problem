@@ -6,7 +6,6 @@ import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTra
 import static java.util.Collections.singletonMap;
 
 import com.google.common.graph.EndpointPair;
-import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,7 +39,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       subNetworkExpectOutEdgesOfNoTransit = subNetworkExpectOutEdgesOfNoTransit(network);
     }
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
-        getOrCalculateShortestPathTree(src, dst, Graphs.transpose(network));
+        getOrCalculateShortestPathTree(src, dst, network);
     final boolean dstChanged = lastDst != dst;
     if (dstChanged) {
       if (lastDst != null) {

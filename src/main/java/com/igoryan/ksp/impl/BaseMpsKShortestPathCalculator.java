@@ -2,6 +2,7 @@ package com.igoryan.ksp.impl;
 
 import static java.util.Collections.emptyList;
 
+import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.igoryan.ksp.KShortestPathsCalculator;
@@ -38,6 +39,7 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
   protected final ShortestPathCalculator shortestPathCalculator;
   protected Node lastDst;
   protected Map<Integer, SortedParallelEdges> cachedEdgesStructure;
+  protected Network<Node, ParallelEdges> cachedTransposedNetwork;
 
   protected BaseMpsKShortestPathCalculator(
       final ShortestPathCalculator shortestPathCalculator) {
@@ -45,11 +47,14 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
   }
 
   protected ReversedShortestPathTree<MpsShortestPath> getOrCalculateShortestPathTree(final Node src,
-      final Node dst, final Network<Node, ParallelEdges> reversed) {
+      final Node dst, final Network<Node, ParallelEdges> network) {
     return dstSwNumToCachedShortestPathTree.computeIfAbsent(dst.getSwNum(), dstSwNum -> {
-      shortestPathCalculator.calculate(dst, src, reversed);
+      if (cachedTransposedNetwork == null) {
+        cachedTransposedNetwork = Graphs.transpose(network);
+      }
+      shortestPathCalculator.calculate(dst, src, cachedTransposedNetwork);
       return ShortestPathsUtil.buildRevertedRecursively(MpsShortestPath.class, dst,
-          MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, reversed.nodes());
+          MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, cachedTransposedNetwork.nodes());
     });
   }
 
@@ -165,5 +170,6 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
     dstSwNumToCachedShortestPathTree.clear();
     cachedEdgesStructure = null;
     lastDst = null;
+    cachedTransposedNetwork = null;
   }
 }
