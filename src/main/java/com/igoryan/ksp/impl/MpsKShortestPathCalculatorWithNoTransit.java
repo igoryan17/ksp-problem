@@ -3,7 +3,6 @@ package com.igoryan.ksp.impl;
 import static com.igoryan.util.ShortestPathsUtil.addNodeToTransitSubGraph;
 import static com.igoryan.util.ShortestPathsUtil.getTransitNodes;
 import static com.igoryan.util.ShortestPathsUtil.removeNodeFromTransitSubGraph;
-import static java.util.Collections.emptyList;
 
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
@@ -11,38 +10,35 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
-import com.igoryan.model.path.YenShortestPath;
+import com.igoryan.model.path.MpsShortestPath;
+import com.igoryan.model.tree.ReversedShortestPathTree;
 import com.igoryan.sp.ShortestPathCalculator;
-import java.util.ArrayList;
 import java.util.List;
+import lombok.NonNull;
 
 @Singleton
-public final class YenKShortestPathsCalculatorWithNoTransit
-    extends BaseYenKShortestPathsCalculator {
+public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
 
-  private volatile MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
+  private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
 
   @Inject
-  protected YenKShortestPathsCalculatorWithNoTransit(
+  public MpsKShortestPathCalculatorWithNoTransit(
       final ShortestPathCalculator shortestPathCalculator) {
     super(shortestPathCalculator);
   }
 
   @Override
-  public List<YenShortestPath> calculate(final Node src, final Node dst,
-      final MutableNetwork<Node, ParallelEdges> network, final int count) {
-    final YenShortestPath firstShortestPath = getFirstShortestPath(src, dst, network);
-    if (firstShortestPath == null) {
-      return emptyList();
-    }
-    final List<YenShortestPath> result = new ArrayList<>();
-    result.add(firstShortestPath);
+  public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
+      final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
+    final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
+        getOrCalculateShortestPathTree(src, dst, Graphs.transpose(network));
     if (subNetworkWithTransits == null) {
       subNetworkWithTransits = Graphs.inducedSubgraph(network, getTransitNodes(network));
     }
     addNodeToTransitSubGraph(src, subNetworkWithTransits, network);
     addNodeToTransitSubGraph(dst, subNetworkWithTransits, network);
-    performYenAlgorithm(dst, network, count, result);
+    final List<MpsShortestPath> result =
+        performMpsAlgorithm(src, dst, count, subNetworkWithTransits, shortestPathTree);
     removeNodeFromTransitSubGraph(src, subNetworkWithTransits);
     removeNodeFromTransitSubGraph(dst, subNetworkWithTransits);
     return result;

@@ -1,17 +1,15 @@
 package com.igoryan.ksp;
 
 import com.google.common.graph.MutableNetwork;
-import com.igoryan.model.Node;
-import com.igoryan.model.ParallelEdges;
-import com.igoryan.model.ShortestPath;
+import com.igoryan.model.network.Node;
+import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.path.ShortestPath;
 import java.util.List;
 
-public interface KShortestPathsCalculator {
+public interface KShortestPathsCalculator<T extends ShortestPath> {
 
-  List<ShortestPath> calculate(final Node src, final Node dst, final MutableNetwork<Node, ParallelEdges> network,
-      int count);
+  List<T> calculate(final Node src, final Node dst,
+      final MutableNetwork<Node, ParallelEdges> network, int count);
 
-  default void clear() {
-
-  }
+  void clear();
 }
