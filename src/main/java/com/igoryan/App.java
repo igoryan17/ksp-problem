@@ -33,7 +33,8 @@ public class App {
   private static final String CPE_GROWING_STEP_PROPERTY = "topology.cpe.discovering.step";
   private static final String PATHS_PER_PAIR_COUNT = "topology.paths.per_pair.count";
   private static final String REPEATS_COUNT_PROPERTY = "benchmarks.repeated.count";
-  private static final String TIMEOUT_AFTER_REPEATS_PROPERTY = "benchmarks.timeout.ms";
+  private static final String TIMEOUT_AFTER_EACH_CALCULATION = "benchmarks.calc.timeout.ms";
+  private static final String TIMEOUT_AFTER_REPEATS_PROPERTY = "benchmarks.series.timeout.ms";
   private static final String PATH_TO_REPORT_PROPERTY = "benchmarks.report.path";
 
   public static void main(String[] args) throws IOException, InterruptedException {
@@ -91,6 +92,8 @@ public class App {
         Integer.parseInt(getSystemPropertyOrDefaultOfApp(appProperties, PATHS_PER_PAIR_COUNT));
     final int repeatsCount =
         Integer.parseInt(getSystemPropertyOrDefaultOfApp(appProperties, REPEATS_COUNT_PROPERTY));
+    final int timeoutBetweenEachCalculation = Integer
+        .parseInt(getSystemPropertyOrDefaultOfApp(appProperties, TIMEOUT_AFTER_EACH_CALCULATION));
     final int timeoutMs = Integer
         .parseInt(getSystemPropertyOrDefaultOfApp(appProperties, TIMEOUT_AFTER_REPEATS_PROPERTY));
     int currentCpeCount =
@@ -111,6 +114,7 @@ public class App {
             ("calc_time," + stopwatch.elapsed(MILLISECONDS) + ",cpe_count," + currentCpeCount
                 + "\n")
                 .getBytes(), APPEND);
+        Thread.sleep(timeoutBetweenEachCalculation);
       }
       currentCpeCount += cpeGrowingStep;
       Thread.sleep(timeoutMs);
