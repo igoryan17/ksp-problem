@@ -26,6 +26,11 @@ public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalcu
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
         getOrCalculateShortestPathTree(src, dst, Graphs.transpose(network));
+    final boolean dstChanged = lastDst != dst;
+    if (dstChanged) {
+      lastDst = dst;
+      cachedEdgesStructure = buildEdgesStructure(network, shortestPathTree);
+    }
     return performMpsAlgorithm(src, dst, count, network, shortestPathTree);
   }
 }

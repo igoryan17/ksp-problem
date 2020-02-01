@@ -1,5 +1,6 @@
 package com.igoryan.model.network;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,16 @@ public final class SortedParallelEdges {
     for (int i = 0; i < this.sortedEdges.size(); i++) {
       edgeToIndex.put(this.sortedEdges.get(i), i);
     }
+  }
+
+  public void addAll(final @NonNull Collection<Edge> edges) {
+    sortedEdges.addAll(edges);
+    sortedEdges.sort(COMPARE_EDGES_BY_REDUCED_COST);
+  }
+
+  public void removeAll(final @NonNull Collection<Edge> edges) {
+    sortedEdges.removeAll(edges);
+    sortedEdges.sort(COMPARE_EDGES_BY_REDUCED_COST);
   }
 
   public int getIndex(final @NonNull Edge edge) {
