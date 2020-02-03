@@ -1,8 +1,8 @@
 package com.igoryan.ksp.impl;
 
-import static com.igoryan.util.ShortestPathsUtil.addNodeToTransitSubGraph;
-import static com.igoryan.util.ShortestPathsUtil.removeNodeFromTransitSubGraph;
-import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTransit;
+import static com.igoryan.util.ShortestPathsUtil.addNode;
+import static com.igoryan.util.ShortestPathsUtil.removeNode;
+import static com.igoryan.util.ShortestPathsUtil.transitSubNetwork;
 import static java.util.Collections.emptyList;
 
 import com.google.common.graph.MutableNetwork;
@@ -37,11 +37,13 @@ public final class YenKShortestPathsCalculatorWithNoTransit
     final List<YenShortestPath> result = new ArrayList<>();
     result.add(firstShortestPath);
     if (subNetworkWithTransits == null) {
-      subNetworkWithTransits = subNetworkExpectOutEdgesOfNoTransit(network);
+      subNetworkWithTransits = transitSubNetwork(network);
     }
-    addNodeToTransitSubGraph(dst, subNetworkWithTransits, network);
+    addNode(src, subNetworkWithTransits, network);
+    addNode(dst, subNetworkWithTransits, network);
     performYenAlgorithm(dst, network, count, result);
-    removeNodeFromTransitSubGraph(dst, subNetworkWithTransits);
+    removeNode(src, subNetworkWithTransits);
+    removeNode(dst, subNetworkWithTransits);
     return result;
   }
 
