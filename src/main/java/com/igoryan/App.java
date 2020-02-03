@@ -94,6 +94,7 @@ public class App {
         Integer.parseInt(getSystemPropertyOrDefaultOfApp(appProperties, PATHS_PER_PAIR_COUNT));
     final int repeatsCount =
         Integer.parseInt(getSystemPropertyOrDefaultOfApp(appProperties, REPEATS_COUNT_PROPERTY));
+    assert repeatsCount > 2;
     final int timeoutBetweenEachCalculation = Integer
         .parseInt(getSystemPropertyOrDefaultOfApp(appProperties, TIMEOUT_AFTER_EACH_CALCULATION));
     final int timeoutMs = Integer
@@ -113,11 +114,14 @@ public class App {
         final Stopwatch stopwatch = Stopwatch.createStarted();
         allPairsCalculator.calculate(network, pathsPerPair);
         stopwatch.stop();
+        Thread.sleep(timeoutBetweenEachCalculation);
+        if (i <= 2) {
+          continue;
+        }
         Files.write(reportPath,
             ("calc_time," + stopwatch.elapsed(MILLISECONDS) + ",cpe_count," + currentCpeCount
                 + "\n")
                 .getBytes(), APPEND);
-        Thread.sleep(timeoutBetweenEachCalculation);
       }
       currentCpeCount += cpeGrowingStep;
       Thread.sleep(timeoutMs);
