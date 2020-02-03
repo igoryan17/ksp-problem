@@ -11,6 +11,7 @@ import com.igoryan.model.tree.ReversedShortestPathTree;
 import com.igoryan.model.tree.ShortestPathsTree;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -90,8 +91,17 @@ public final class ShortestPathsUtil {
         .collect(Collectors.toSet());
   }
 
-  public static MutableNetwork<Node, ParallelEdges> subNetworkExpectOutEdgesOfNoTransit(final @NonNull
-      MutableNetwork<Node, ParallelEdges> network) {
+  public static MutableNetwork<Node, ParallelEdges> transitSubNetwork(
+      final @NonNull MutableNetwork<Node, ParallelEdges> network) {
+    final List<Node> transitNodes = network.nodes().stream()
+        .filter(Node::isTransit)
+        .collect(Collectors.toList());
+    return Graphs.inducedSubgraph(network, transitNodes);
+  }
+
+  public static MutableNetwork<Node, ParallelEdges> subNetworkExpectOutEdgesOfNoTransit(
+      final @NonNull
+          MutableNetwork<Node, ParallelEdges> network) {
     final MutableNetwork<Node, ParallelEdges> result = Graphs.copyOf(network);
     result.nodes().stream()
         .filter(node -> !node.isTransit())
@@ -99,7 +109,26 @@ public final class ShortestPathsUtil {
     return result;
   }
 
-  public static void addNodeToTransitSubGraph(final @NonNull Node node,
+  public static void addNode(final @NonNull Node node,
+      final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit,
+      final @NonNull MutableNetwork<Node, ParallelEdges> network) {
+    if (node.isTransit()) {
+      return;
+    }
+    subNetworkWithTransit.addNode(node);
+    network.incidentEdges(node)
+        .forEach(edge -> subNetworkWithTransit.addEdge(network.incidentNodes(edge), edge));
+  }
+
+  public static void removeNode(final @NonNull Node node,
+      final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit) {
+    if (node.isTransit()) {
+      return;
+    }
+    subNetworkWithTransit.removeNode(node);
+  }
+
+  public static void addInEdges(final @NonNull Node node,
       final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit,
       final @NonNull MutableNetwork<Node, ParallelEdges> network) {
     if (node.isTransit()) {
@@ -110,7 +139,7 @@ public final class ShortestPathsUtil {
         .forEach(edge -> subNetworkWithTransit.addEdge(network.incidentNodes(edge), edge));
   }
 
-  public static void removeNodeFromTransitSubGraph(final @NonNull Node node,
+  public static void removeInEdges(final @NonNull Node node,
       final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit) {
 
     if (node.isTransit()) {

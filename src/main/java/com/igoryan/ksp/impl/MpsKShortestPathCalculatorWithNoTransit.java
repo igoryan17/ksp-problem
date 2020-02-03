@@ -1,7 +1,7 @@
 package com.igoryan.ksp.impl;
 
-import static com.igoryan.util.ShortestPathsUtil.addNodeToTransitSubGraph;
-import static com.igoryan.util.ShortestPathsUtil.removeNodeFromTransitSubGraph;
+import static com.igoryan.util.ShortestPathsUtil.addInEdges;
+import static com.igoryan.util.ShortestPathsUtil.removeInEdges;
 import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTransit;
 import static java.util.Collections.singletonMap;
 
@@ -44,11 +44,11 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
     if (dstChanged) {
       if (lastDst != null) {
         removeInEdgesFromStructure(lastDst);
-        removeNodeFromTransitSubGraph(lastDst, subNetworkExpectOutEdgesOfNoTransit);
+        removeInEdges(lastDst, subNetworkExpectOutEdgesOfNoTransit);
       }
       lastDst = dst;
       cachedEdgesStructure = buildEdgesStructure(network, shortestPathTree);
-      addNodeToTransitSubGraph(dst, subNetworkExpectOutEdgesOfNoTransit, network);
+      addInEdges(dst, subNetworkExpectOutEdgesOfNoTransit, network);
       addInEdgesToStructure(dst);
     }
     final List<MpsShortestPath> result =
