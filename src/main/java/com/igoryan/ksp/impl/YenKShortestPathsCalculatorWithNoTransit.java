@@ -19,6 +19,7 @@ import java.util.List;
 public final class YenKShortestPathsCalculatorWithNoTransit
     extends BaseYenKShortestPathsCalculator {
 
+  private Node lastSrc;
   private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
 
   @Inject
@@ -39,10 +40,15 @@ public final class YenKShortestPathsCalculatorWithNoTransit
     if (subNetworkWithTransits == null) {
       subNetworkWithTransits = transitSubNetwork(network);
     }
-    addNode(src, subNetworkWithTransits, network);
+    if (src != lastSrc) {
+      if (lastSrc != null) {
+        removeNode(lastSrc, subNetworkWithTransits);
+      }
+      addNode(src, subNetworkWithTransits, network);
+      lastSrc = src;
+    }
     addNode(dst, subNetworkWithTransits, network);
     performYenAlgorithm(dst, subNetworkWithTransits, count, result);
-    removeNode(src, subNetworkWithTransits);
     removeNode(dst, subNetworkWithTransits);
     return result;
   }
@@ -51,5 +57,6 @@ public final class YenKShortestPathsCalculatorWithNoTransit
   public void clear() {
     super.clear();
     subNetworkWithTransits = null;
+    this.lastSrc = null;
   }
 }

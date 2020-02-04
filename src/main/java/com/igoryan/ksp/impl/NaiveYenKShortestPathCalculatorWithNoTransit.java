@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.Value;
 
 @Singleton
@@ -31,8 +32,8 @@ public final class NaiveYenKShortestPathCalculatorWithNoTransit
   }
 
   @Override
-  public List<YenShortestPath> calculate(final Node src, final Node dst,
-      final MutableNetwork<Node, ParallelEdges> network, final int count) {
+  public List<YenShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
+      final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
     prepareNetwork(network);
     addOutEdgesToNetwork(src, network);
     final YenShortestPath firstShortestPath = getFirstShortestPath(src, dst, network);

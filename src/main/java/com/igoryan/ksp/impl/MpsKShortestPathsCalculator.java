@@ -28,7 +28,7 @@ public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalcu
     final boolean dstChanged = lastDst != dst;
     if (dstChanged) {
       lastDst = dst;
-      cachedEdgesStructure = buildEdgesStructure(network, shortestPathTree);
+      cachedEdgesStructure = buildEdgesStructure(network);
     }
     return performMpsAlgorithm(src, dst, count, network, shortestPathTree);
   }

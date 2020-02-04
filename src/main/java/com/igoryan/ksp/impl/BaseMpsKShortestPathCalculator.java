@@ -2,6 +2,7 @@ package com.igoryan.ksp.impl;
 
 import static java.util.Collections.emptyList;
 
+import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
@@ -18,6 +19,7 @@ import com.igoryan.model.tree.ReversedShortestPathTree;
 import com.igoryan.sp.ShortestPathCalculator;
 import com.igoryan.util.ShortestPathsUtil;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +29,8 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculator<MpsShortestPath> {
 
@@ -53,6 +57,7 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
         cachedTransposedNetwork = Graphs.transpose(network);
       }
       shortestPathCalculator.calculate(dst, src, cachedTransposedNetwork);
+      calcReducedCost(network);
       return ShortestPathsUtil.buildRevertedRecursively(MpsShortestPath.class, dst,
           MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, cachedTransposedNetwork.nodes());
     });
@@ -117,13 +122,15 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
         }
         final List<Edge> fromHeadOfDeviationEdgeToDst =
             shortestPathTree.getPath(deviationEdge.getDstSwNum());
-        if (fromHeadOfDeviationEdgeToDst != null) {
-          candidates.add(builder
-              .append(deviationEdge, targetNodeOfDeviationEdge)
-              .append(fromHeadOfDeviationEdgeToDst, shortestPathTree.getSwNumToOriginalNode())
-              .build()
-          );
+        if (fromHeadOfDeviationEdgeToDst.isEmpty()) {
+          nodeIndex++;
+          continue;
         }
+        candidates.add(builder
+            .append(deviationEdge, targetNodeOfDeviationEdge)
+            .append(fromHeadOfDeviationEdgeToDst, shortestPathTree.getSwNumToOriginalNode())
+            .build()
+        );
         nodeIndex++;
       } while (Objects.requireNonNull(toDeviationNode).withoutLoops()
           && nodeIndex < indexOfTarget);
@@ -131,34 +138,39 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
     return result;
   }
 
+  protected void calcReducedCost(final Network<Node, ParallelEdges> network) {
+    for (final ParallelEdges parallelEdges : network.edges()) {
+      final EndpointPair<Node> endpointPair = network.incidentNodes(parallelEdges);
+      final long costFromHead = endpointPair.target().getDistance();
+      final long costFromTail = endpointPair.source().getDistance();
+      if (Long.MAX_VALUE == costFromHead || Long.MAX_VALUE == costFromTail) {
+        parallelEdges.forEach(edge -> edge.setReducedCost(Long.MAX_VALUE));
+        continue;
+      }
+      parallelEdges
+          .forEach(edge -> edge.setReducedCost(costFromHead - costFromTail + edge.getCost()));
+    }
+  }
+
   protected Map<Integer, SortedParallelEdges> buildEdgesStructure(
-      final MutableNetwork<Node, ParallelEdges> network,
-      final ReversedShortestPathTree<MpsShortestPath> shortestPathTree) {
+      final Network<Node, ParallelEdges> network) {
     final Map<Integer, SortedParallelEdges> edgesStructure = new HashMap<>(network.nodes().size());
     for (Node node : network.nodes()) {
       final Set<ParallelEdges> outEdges = network.outEdges(node);
       if (outEdges.isEmpty()) {
         continue;
       }
-      final List<Edge> notSortedEdges = new ArrayList<>();
-      final Map<Integer, Node> swNumToNode = new HashMap<>();
-      outEdges.forEach(parallelEdges -> {
-        final Node targetNode = network.incidentNodes(parallelEdges).target();
-        swNumToNode.put(targetNode.getSwNum(), targetNode);
-        for (Edge edge : parallelEdges) {
-          final long costFromHead = shortestPathTree.getCostOrInfinity(edge.getDstSwNum());
-          final long costFromTail = shortestPathTree.getCostOrInfinity(edge.getSrcSwNum());
-          if (Long.MAX_VALUE == costFromHead || Long.MAX_VALUE == costFromTail) {
-            edge.setReducedCost(Long.MAX_VALUE);
-            continue;
-          }
-          edge.setReducedCost(costFromHead - costFromTail + edge.getCost());
-          notSortedEdges.add(edge);
-        }
-      });
+      final List<Edge> notSortedEdges = outEdges.stream()
+          .flatMap(Collection::stream)
+          .filter(edge -> edge.getReducedCost() < Long.MAX_VALUE)
+          .collect(Collectors.toList());
       if (notSortedEdges.isEmpty()) {
         continue;
       }
+      final Map<Integer, Node> swNumToNode = outEdges.stream()
+          .map(network::incidentNodes)
+          .map(EndpointPair::target)
+          .collect(Collectors.toMap(Node::getSwNum, Function.identity()));
       edgesStructure.put(node.getSwNum(),
           new SortedParallelEdges(node.getSwNum(), swNumToNode, notSortedEdges));
     }

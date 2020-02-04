@@ -2,7 +2,6 @@ package com.igoryan.model.network;
 
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -27,12 +26,11 @@ public final class SortedParallelEdges {
 
   public SortedParallelEdges(final int srcSwNum,
       final Map<Integer, Node> swNumToNode,
-      final @NonNull List<Edge> notSortedEdges) {
+      final @NonNull Collection<Edge> notSortedEdges) {
     this.srcSwNum = srcSwNum;
     this.swNumToNode = swNumToNode;
     this.sortedEdges = new TreeSet<>(COMPARE_EDGES_BY_REDUCED_COST);
     sortedEdges.addAll(notSortedEdges);
-    this.sortedEdges.addAll(notSortedEdges);
   }
 
   public void addAll(final @NonNull Collection<Edge> edgesWithSameDst,
@@ -41,7 +39,8 @@ public final class SortedParallelEdges {
     sortedEdges.addAll(edgesWithSameDst);
   }
 
-  public void removeAll(final @NonNull Collection<Edge> edges, final @NonNull Node dst) {
+  public void removeAll(final @NonNull Collection<Edge> edges, final @NonNull Node dstNode) {
+    swNumToNode.remove(dstNode.getSwNum());
     sortedEdges.removeAll(edges);
   }
 

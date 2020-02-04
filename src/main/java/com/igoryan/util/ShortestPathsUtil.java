@@ -138,13 +138,4 @@ public final class ShortestPathsUtil {
     network.inEdges(node)
         .forEach(edge -> subNetworkWithTransit.addEdge(network.incidentNodes(edge), edge));
   }
-
-  public static void removeInEdges(final @NonNull Node node,
-      final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit) {
-
-    if (node.isTransit()) {
-      return;
-    }
-    subNetworkWithTransit.inEdges(node).forEach(subNetworkWithTransit::removeEdge);
-  }
 }
