@@ -41,7 +41,7 @@ public final class YenKShortestPathsCalculatorWithNoTransit
     }
     addNode(src, subNetworkWithTransits, network);
     addNode(dst, subNetworkWithTransits, network);
-    performYenAlgorithm(dst, network, count, result);
+    performYenAlgorithm(dst, subNetworkWithTransits, count, result);
     removeNode(src, subNetworkWithTransits);
     removeNode(dst, subNetworkWithTransits);
     return result;
