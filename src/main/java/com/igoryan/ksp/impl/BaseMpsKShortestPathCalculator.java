@@ -4,7 +4,6 @@ import static java.util.Collections.emptyList;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graphs;
-import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Edge;
@@ -64,8 +63,7 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
   }
 
   protected List<MpsShortestPath> performMpsAlgorithm(final Node src, final Node dst,
-      final int count, final MutableNetwork<Node, ParallelEdges> network,
-      final ReversedShortestPathTree<MpsShortestPath> shortestPathTree) {
+      final int count, final ReversedShortestPathTree<MpsShortestPath> shortestPathTree) {
     final Queue<MpsShortestPath> candidates = new PriorityQueue<>(COMPARE_SHORTEST_PATHS_BY_COST);
     final MpsShortestPath firstShortestPath = shortestPathTree.getShortestPath(src.getSwNum());
     if (firstShortestPath == null) {

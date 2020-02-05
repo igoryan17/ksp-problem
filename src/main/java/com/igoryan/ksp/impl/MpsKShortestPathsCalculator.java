@@ -30,6 +30,6 @@ public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalcu
       lastDst = dst;
       cachedEdgesStructure = buildEdgesStructure(network);
     }
-    return performMpsAlgorithm(src, dst, count, network, shortestPathTree);
+    return performMpsAlgorithm(src, dst, count, shortestPathTree);
   }
 }

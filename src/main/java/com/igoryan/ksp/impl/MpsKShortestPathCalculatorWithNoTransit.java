@@ -54,7 +54,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
     addNode(src, subNetworkWithTransits, network);
     addNodeEdgesOfTransitSubNetwork(src);
     final List<MpsShortestPath> result =
-        performMpsAlgorithm(src, dst, count, subNetworkWithTransits, shortestPathTree);
+        performMpsAlgorithm(src, dst, count, shortestPathTree);
     removeNodeEdgesOfTransitSubNetwork(src);
     removeNode(src, subNetworkWithTransits);
     return result;
