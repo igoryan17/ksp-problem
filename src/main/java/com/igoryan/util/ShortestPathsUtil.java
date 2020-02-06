@@ -128,14 +128,22 @@ public final class ShortestPathsUtil {
     subNetworkWithTransit.removeNode(node);
   }
 
+  public static void removeInEdges(final @NonNull Node node,
+      final @NonNull MutableNetwork<Node, ParallelEdges> subNetwork) {
+    if (node.isTransit()) {
+      return;
+    }
+    subNetwork.inEdges(node).forEach(subNetwork::removeEdge);
+  }
+
   public static void addInEdges(final @NonNull Node node,
-      final @NonNull MutableNetwork<Node, ParallelEdges> subNetworkWithTransit,
+      final @NonNull MutableNetwork<Node, ParallelEdges> subNetwork,
       final @NonNull MutableNetwork<Node, ParallelEdges> network) {
     if (node.isTransit()) {
       return;
     }
-    subNetworkWithTransit.addNode(node);
+    subNetwork.addNode(node);
     network.inEdges(node)
-        .forEach(edge -> subNetworkWithTransit.addEdge(network.incidentNodes(edge), edge));
+        .forEach(edge -> subNetwork.addEdge(network.incidentNodes(edge), edge));
   }
 }

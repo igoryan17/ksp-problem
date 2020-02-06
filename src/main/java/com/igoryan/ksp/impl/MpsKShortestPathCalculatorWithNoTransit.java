@@ -1,8 +1,8 @@
 package com.igoryan.ksp.impl;
 
-import static com.igoryan.util.ShortestPathsUtil.addNode;
-import static com.igoryan.util.ShortestPathsUtil.removeNode;
-import static com.igoryan.util.ShortestPathsUtil.transitSubNetwork;
+import static com.igoryan.util.ShortestPathsUtil.addInEdges;
+import static com.igoryan.util.ShortestPathsUtil.removeInEdges;
+import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTransit;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
@@ -23,8 +23,7 @@ import lombok.NonNull;
 @Singleton
 public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
 
-  private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
-  private boolean subNetworkWithoutEdges = true;
+  private MutableNetwork<Node, ParallelEdges> subNetworkWithoutInEdgesToNoTransit;
 
   @Inject
   public MpsKShortestPathCalculatorWithNoTransit(
@@ -35,39 +34,34 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
   @Override
   public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
-    if (subNetworkWithTransits == null) {
-      subNetworkWithTransits = transitSubNetwork(network);
-      subNetworkWithoutEdges = subNetworkWithTransits.edges().isEmpty();
+    if (subNetworkWithoutInEdgesToNoTransit == null) {
+      subNetworkWithoutInEdgesToNoTransit = subNetworkExpectOutEdgesOfNoTransit(network);
     }
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
         getOrCalculateShortestPathTree(src, dst, network);
     if (cachedEdgesStructure == null) {
-      cachedEdgesStructure = buildEdgesStructure(subNetworkWithTransits);
+      cachedEdgesStructure = buildEdgesStructure(subNetworkWithoutInEdgesToNoTransit);
     }
     if (lastDst != dst) {
       if (lastDst != null) {
-        removeNodeEdgesOfTransitSubNetwork(lastDst);
-        removeNode(lastDst, subNetworkWithTransits);
+        removeNodeInEdgesOfSubNetwork(lastDst);
+        removeInEdges(lastDst, subNetworkWithoutInEdgesToNoTransit);
       }
       lastDst = dst;
-      addNode(dst, subNetworkWithTransits, network);
-      addNodeEdgesOfTransitSubNetwork(dst);
+      addInEdges(dst, subNetworkWithoutInEdgesToNoTransit, network);
+      addInEdgesOfDstToTransitSubNetwork(dst);
     }
-    addNode(src, subNetworkWithTransits, network);
-    addNodeEdgesOfTransitSubNetwork(src);
-    final List<MpsShortestPath> result =
-        performMpsAlgorithm(src, dst, count, shortestPathTree);
-    removeNodeEdgesOfTransitSubNetwork(src);
-    removeNode(src, subNetworkWithTransits);
-    return result;
+    return performMpsAlgorithm(src, dst, count, shortestPathTree);
   }
 
-  private void addNodeEdgesOfTransitSubNetwork(final @NonNull Node node) {
+  private void addInEdgesOfDstToTransitSubNetwork(final @NonNull Node node) {
     if (node.isTransit()) {
       return;
     }
-    for (final ParallelEdges parallelEdges : subNetworkWithTransits.incidentEdges(node)) {
-      final EndpointPair<Node> endpointPair = subNetworkWithTransits.incidentNodes(parallelEdges);
+    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit
+        .inEdges(node)) {
+      final EndpointPair<Node> endpointPair =
+          subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
       final SortedParallelEdges sortedParallelEdges =
           cachedEdgesStructure.get(endpointPair.source().getSwNum());
       if (sortedParallelEdges == null) {
@@ -82,16 +76,14 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
     }
   }
 
-  private void removeNodeEdgesOfTransitSubNetwork(final @NonNull Node node) {
+  private void removeNodeInEdgesOfSubNetwork(final @NonNull Node node) {
     if (node.isTransit()) {
       return;
     }
-    if (subNetworkWithoutEdges) {
-      cachedEdgesStructure.clear();
-      return;
-    }
-    for (final ParallelEdges parallelEdges : subNetworkWithTransits.incidentEdges(node)) {
-      final EndpointPair<Node> endpointPair = subNetworkWithTransits.incidentNodes(parallelEdges);
+    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit
+        .inEdges(node)) {
+      final EndpointPair<Node> endpointPair =
+          subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
       final Integer swNumOfSrc = endpointPair.source().getSwNum();
       final SortedParallelEdges sortedParallelEdges =
           Objects.requireNonNull(cachedEdgesStructure.get(swNumOfSrc));
@@ -105,6 +97,6 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
   @Override
   public void clear() {
     super.clear();
-    subNetworkWithTransits = null;
+    subNetworkWithoutInEdgesToNoTransit = null;
   }
 }
