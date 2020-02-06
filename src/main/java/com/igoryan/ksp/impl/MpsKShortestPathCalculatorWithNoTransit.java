@@ -5,6 +5,7 @@ import static com.igoryan.util.ShortestPathsUtil.removeInEdges;
 import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectInEdgesOfNoTransit;
 
 import com.google.common.graph.EndpointPair;
+import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +37,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
     if (subNetworkWithoutInEdgesToNoTransit == null) {
       subNetworkWithoutInEdgesToNoTransit = subNetworkExpectInEdgesOfNoTransit(network);
+      needCheckCycles = Graphs.hasCycle(subNetworkWithoutInEdgesToNoTransit);
     }
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
         getOrCalculateShortestPathTree(src, dst, network);

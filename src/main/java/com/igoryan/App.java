@@ -1,6 +1,5 @@
 package com.igoryan;
 
-import static com.igoryan.model.Algorithms.MPS;
 import static com.igoryan.util.TopologyUtil.simulateSdWanTopology;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -9,16 +8,11 @@ import com.google.common.base.Stopwatch;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.TypeLiteral;
 import com.igoryan.apsp.AllPairsCalculator;
-import com.igoryan.ksp.KShortestPathsCalculator;
-import com.igoryan.ksp.impl.BaseMpsKShortestPathCalculator;
 import com.igoryan.model.Algorithms;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
-import com.igoryan.model.path.MpsShortestPath;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,13 +105,6 @@ public class App {
         Paths.get(getSystemPropertyOrDefaultOfApp(appProperties, PATH_TO_REPORT_PROPERTY));
     if (Files.notExists(reportPath)) {
       Files.createFile(reportPath);
-    }
-    if (algorithm == MPS && !linksBetweenGwEnabled) {
-      final BaseMpsKShortestPathCalculator instance =
-          (BaseMpsKShortestPathCalculator) injector.getInstance(
-              Key.get(new TypeLiteral<KShortestPathsCalculator<MpsShortestPath>>() {
-              }));
-      instance.setNeedCheckCycles(false);
     }
     while (currentCpeCount < cpeMaxCount) {
       for (int i = 0; i < repeatsCount; i++) {
