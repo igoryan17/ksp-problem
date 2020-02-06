@@ -24,6 +24,7 @@ import lombok.NonNull;
 public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
 
   private MutableNetwork<Node, ParallelEdges> subNetworkWithTransits;
+  private boolean subNetworkWithoutEdges = true;
 
   @Inject
   public MpsKShortestPathCalculatorWithNoTransit(
@@ -36,6 +37,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
     if (subNetworkWithTransits == null) {
       subNetworkWithTransits = transitSubNetwork(network);
+      subNetworkWithoutEdges = subNetworkWithTransits.edges().isEmpty();
     }
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
         getOrCalculateShortestPathTree(src, dst, network);
@@ -82,6 +84,10 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
 
   private void removeNodeEdgesOfTransitSubNetwork(final @NonNull Node node) {
     if (node.isTransit()) {
+      return;
+    }
+    if (subNetworkWithoutEdges) {
+      cachedEdgesStructure.clear();
       return;
     }
     for (final ParallelEdges parallelEdges : subNetworkWithTransits.incidentEdges(node)) {
