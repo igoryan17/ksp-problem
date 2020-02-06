@@ -30,8 +30,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.Setter;
 
-abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculator<MpsShortestPath> {
+public abstract class BaseMpsKShortestPathCalculator
+    implements KShortestPathsCalculator<MpsShortestPath> {
 
   protected static final Comparator<MpsShortestPath> COMPARE_SHORTEST_PATHS_BY_COST =
       Comparator.comparingLong(MpsShortestPath::getOriginalCost);
@@ -43,6 +45,8 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
   protected Node lastDst;
   protected Map<Integer, SortedParallelEdges> cachedEdgesStructure;
   protected Network<Node, ParallelEdges> cachedTransposedNetwork;
+  @Setter
+  protected boolean needCheckCycles = true;
 
   protected BaseMpsKShortestPathCalculator(
       final ShortestPathCalculator shortestPathCalculator) {
@@ -76,7 +80,7 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
     while (!candidates.isEmpty() && currentCount <= count) {
       final MpsShortestPath shortestPath = candidates.poll();
       final NodeEdgeTuple nodeEdgeTuple = kShortestPathsTree.getDeviationKey(shortestPath);
-      if (shortestPath.withoutLoops()) {
+      if (!needCheckCycles || shortestPath.withoutLoops()) {
         currentCount++;
         result.add(shortestPath);
         kShortestPathsTree.add(shortestPath, count - 1);
@@ -100,7 +104,7 @@ abstract class BaseMpsKShortestPathCalculator implements KShortestPathsCalculato
         final TreeSet<Edge> parallelEdges = sortedParallelEdges.getSortedEdges();
         Edge deviationEdge = null;
         for (Edge edge : parallelEdges.tailSet(shortestPath.getEdges().get(nodeIndex), false)) {
-          if (toDeviationNode.formsCycle(edge)) {
+          if (needCheckCycles && toDeviationNode.formsCycle(edge)) {
             continue;
           }
           deviationEdge = edge;
