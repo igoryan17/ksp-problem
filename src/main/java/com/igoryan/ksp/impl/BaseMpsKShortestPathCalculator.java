@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.Setter;
 
 public abstract class BaseMpsKShortestPathCalculator
     implements KShortestPathsCalculator<MpsShortestPath> {
@@ -45,7 +44,6 @@ public abstract class BaseMpsKShortestPathCalculator
   protected Node lastDst;
   protected Map<Integer, SortedParallelEdges> cachedEdgesStructure;
   protected Network<Node, ParallelEdges> cachedTransposedNetwork;
-  @Setter
   protected boolean needCheckCycles = true;
 
   protected BaseMpsKShortestPathCalculator(
