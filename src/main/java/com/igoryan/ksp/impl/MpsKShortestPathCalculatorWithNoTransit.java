@@ -2,7 +2,7 @@ package com.igoryan.ksp.impl;
 
 import static com.igoryan.util.ShortestPathsUtil.addInEdges;
 import static com.igoryan.util.ShortestPathsUtil.removeInEdges;
-import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectOutEdgesOfNoTransit;
+import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectInEdgesOfNoTransit;
 
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
@@ -35,7 +35,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
   public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
     if (subNetworkWithoutInEdgesToNoTransit == null) {
-      subNetworkWithoutInEdgesToNoTransit = subNetworkExpectOutEdgesOfNoTransit(network);
+      subNetworkWithoutInEdgesToNoTransit = subNetworkExpectInEdgesOfNoTransit(network);
     }
     final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
         getOrCalculateShortestPathTree(src, dst, network);
@@ -58,8 +58,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
     if (node.isTransit()) {
       return;
     }
-    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit
-        .inEdges(node)) {
+    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit.inEdges(node)) {
       final EndpointPair<Node> endpointPair =
           subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
       final SortedParallelEdges sortedParallelEdges =
@@ -80,8 +79,7 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
     if (node.isTransit()) {
       return;
     }
-    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit
-        .inEdges(node)) {
+    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit.inEdges(node)) {
       final EndpointPair<Node> endpointPair =
           subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
       final Integer swNumOfSrc = endpointPair.source().getSwNum();

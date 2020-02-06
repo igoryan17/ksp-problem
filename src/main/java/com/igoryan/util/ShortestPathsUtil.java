@@ -99,13 +99,13 @@ public final class ShortestPathsUtil {
     return Graphs.inducedSubgraph(network, transitNodes);
   }
 
-  public static MutableNetwork<Node, ParallelEdges> subNetworkExpectOutEdgesOfNoTransit(
+  public static MutableNetwork<Node, ParallelEdges> subNetworkExpectInEdgesOfNoTransit(
       final @NonNull
           MutableNetwork<Node, ParallelEdges> network) {
     final MutableNetwork<Node, ParallelEdges> result = Graphs.copyOf(network);
     result.nodes().stream()
         .filter(node -> !node.isTransit())
-        .forEach(node -> network.outEdges(node).forEach(result::removeEdge));
+        .forEach(node -> network.inEdges(node).forEach(result::removeEdge));
     return result;
   }
 
