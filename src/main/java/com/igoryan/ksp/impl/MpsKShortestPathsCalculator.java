@@ -6,12 +6,14 @@ import com.google.inject.Singleton;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
-import com.igoryan.model.tree.ReversedShortestPathTree;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.List;
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Logger;
 
 @Singleton
+@Log4j2(topic = "com.igoryan.ksp")
 public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalculator {
 
   @Inject
@@ -23,13 +25,17 @@ public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalcu
   @Override
   public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
-    final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
-        getOrCalculateShortestPathTree(src, dst, network);
     final boolean dstChanged = lastDst != dst;
     if (dstChanged) {
       lastDst = dst;
-      cachedEdgesStructure = buildEdgesStructure(network);
+      cachedShortestPathTree = calculateShortestPathTree(src, dst, network);
+      fillEdgesStructure(network);
     }
-    return performMpsAlgorithm(src, dst, count, shortestPathTree);
+    return performMpsAlgorithm(src, dst, count);
+  }
+
+  @Override
+  Logger log() {
+    return log;
   }
 }

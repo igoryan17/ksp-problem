@@ -49,10 +49,12 @@ public final class TopologyUtil {
         final ParallelEdges fromGwParallelEdges =
             new ParallelEdges(gwNum, cpeNum, parallelLinksCount);
         for (int i = 0; i < parallelLinksCount; i++) {
-          final Edge cpeGw = new Edge(cpeNum, (short) i, gwNum, (short) i,
+          final Edge cpeGw = new Edge(cpeNum, (short) (cpeNum + i), gwNum,
+              (short) (gwNum + cpeNum + i),
               randomForWeights.nextInt(MAX_WEIGHT) + 1);
           parallelEdgesToGw.add(cpeGw);
-          final Edge gwCpe = new Edge(gwNum, (short) i, cpeNum, (short) i,
+          final Edge gwCpe = new Edge(gwNum, (short) (gwNum + cpeNum + i), cpeNum,
+              (short) (cpeNum + i),
               randomForWeights.nextInt(MAX_WEIGHT) + 1);
           fromGwParallelEdges.add(gwCpe);
         }

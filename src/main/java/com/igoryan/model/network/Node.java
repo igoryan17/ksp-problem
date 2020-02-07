@@ -157,9 +157,6 @@ public final class Node {
     return "Node{" +
         "swNum=" + swNum +
         ", isTransit=" + isTransit +
-        ", isVisited=" + isVisited +
-        ", distance=" + distance +
-        ", edgePredecessor=" + edgePredecessor +
         '}';
   }
 }

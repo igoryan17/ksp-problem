@@ -50,4 +50,12 @@ public final class NodeEdgeTuple {
     }
     return h;
   }
+
+  @Override
+  public String toString() {
+    return "NodeEdgeTuple{" +
+        "node=" + node +
+        ", edge=" + edge +
+        '}';
+  }
 }

@@ -7,7 +7,10 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="com.igoryan.benchmark" level="info" additivity="false">
+        <Logger name="com.igoryan.app" level="info" additivity="false">
+            <AppenderRef ref="CONSOLE"/>
+        </Logger>
+        <Logger name="com.igoryan.ksp" level="info" additivity="false">
             <AppenderRef ref="CONSOLE"/>
         </Logger>
     </Loggers>

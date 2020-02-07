@@ -236,4 +236,14 @@ public class MpsShortestPath extends ShortestPath {
       return new MpsShortestPath(src, dst, edges, nodes, cost);
     }
   }
+
+  @Override
+  public String toString() {
+    return "MpsShortestPath{" +
+        "src=" + src +
+        ", dst=" + dst +
+        ", edges=" + edges +
+        ", nodes=" + nodes +
+        '}';
+  }
 }

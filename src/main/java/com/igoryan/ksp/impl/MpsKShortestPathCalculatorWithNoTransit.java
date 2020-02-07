@@ -4,24 +4,21 @@ import static com.igoryan.util.ShortestPathsUtil.addInEdges;
 import static com.igoryan.util.ShortestPathsUtil.removeInEdges;
 import static com.igoryan.util.ShortestPathsUtil.subNetworkExpectInEdgesOfNoTransit;
 
-import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
-import com.igoryan.model.network.SortedParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
-import com.igoryan.model.tree.ReversedShortestPathTree;
 import com.igoryan.sp.ShortestPathCalculator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import lombok.NonNull;
+import lombok.extern.log4j.Log4j2;
+import org.apache.logging.log4j.Logger;
 
 @Singleton
+@Log4j2(topic = "com.igoryan.ksp")
 public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShortestPathCalculator {
 
   private MutableNetwork<Node, ParallelEdges> subNetworkWithoutInEdgesToNoTransit;
@@ -39,59 +36,22 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       subNetworkWithoutInEdgesToNoTransit = subNetworkExpectInEdgesOfNoTransit(network);
       needCheckCycles = Graphs.hasCycle(subNetworkWithoutInEdgesToNoTransit);
     }
-    final ReversedShortestPathTree<MpsShortestPath> shortestPathTree =
-        getOrCalculateShortestPathTree(src, dst, network);
-    if (cachedEdgesStructure == null) {
-      cachedEdgesStructure = buildEdgesStructure(subNetworkWithoutInEdgesToNoTransit);
-    }
     if (lastDst != dst) {
       if (lastDst != null) {
-        removeNodeInEdgesOfSubNetwork(lastDst);
+        cachedEdgesStructure.clear();
         removeInEdges(lastDst, subNetworkWithoutInEdgesToNoTransit);
       }
       lastDst = dst;
+      cachedShortestPathTree = calculateShortestPathTree(src, dst, network);
       addInEdges(dst, subNetworkWithoutInEdgesToNoTransit, network);
-      addInEdgesOfDstToTransitSubNetwork(dst);
+      fillEdgesStructure(subNetworkWithoutInEdgesToNoTransit);
     }
-    return performMpsAlgorithm(src, dst, count, shortestPathTree);
+    return performMpsAlgorithm(src, dst, count);
   }
 
-  private void addInEdgesOfDstToTransitSubNetwork(final @NonNull Node node) {
-    if (node.isTransit()) {
-      return;
-    }
-    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit.inEdges(node)) {
-      final EndpointPair<Node> endpointPair =
-          subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
-      final SortedParallelEdges sortedParallelEdges =
-          cachedEdgesStructure.get(endpointPair.source().getSwNum());
-      if (sortedParallelEdges == null) {
-        final Integer swNumOfSrc = endpointPair.source().getSwNum();
-        final Map<Integer, Node> swNumToNode = new HashMap<>();
-        swNumToNode.put(endpointPair.target().getSwNum(), endpointPair.target());
-        cachedEdgesStructure
-            .put(swNumOfSrc, new SortedParallelEdges(swNumOfSrc, swNumToNode, parallelEdges));
-        continue;
-      }
-      sortedParallelEdges.addAll(parallelEdges, endpointPair.target());
-    }
-  }
-
-  private void removeNodeInEdgesOfSubNetwork(final @NonNull Node node) {
-    if (node.isTransit()) {
-      return;
-    }
-    for (final ParallelEdges parallelEdges : subNetworkWithoutInEdgesToNoTransit.inEdges(node)) {
-      final EndpointPair<Node> endpointPair =
-          subNetworkWithoutInEdgesToNoTransit.incidentNodes(parallelEdges);
-      final Integer swNumOfSrc = endpointPair.source().getSwNum();
-      final SortedParallelEdges sortedParallelEdges =
-          Objects.requireNonNull(cachedEdgesStructure.get(swNumOfSrc));
-      sortedParallelEdges.removeAll(parallelEdges, endpointPair.target());
-      if (sortedParallelEdges.getSortedEdges().isEmpty()) {
-        cachedEdgesStructure.remove(swNumOfSrc);
-      }
-    }
+  @Override
+  Logger log() {
+    return log;
   }
 
   @Override

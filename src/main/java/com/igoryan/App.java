@@ -23,7 +23,7 @@ import java.util.Properties;
 import lombok.NonNull;
 import lombok.extern.log4j.Log4j2;
 
-@Log4j2(topic = "com.igoryan.benchmark")
+@Log4j2(topic = "com.igoryan.app")
 public class App {
 
   private static final String ALGORITHM_PROPERTY = "algorithm";
@@ -111,6 +111,7 @@ public class App {
         log.info("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
         final MutableNetwork<Node, ParallelEdges> network =
             simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled);
+        log.trace("network is simulated, network: {}", network);
         final Stopwatch stopwatch = Stopwatch.createStarted();
         allPairsCalculator.calculate(network, pathsPerPair);
         stopwatch.stop();
