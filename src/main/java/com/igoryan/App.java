@@ -106,9 +106,11 @@ public class App {
     if (Files.notExists(reportPath)) {
       Files.createFile(reportPath);
     }
+    log.info("run benchmarks; algorithm: {}, pathsPerPair: {}, gwsConnected: {}", algorithm,
+        pathsPerPair, linksBetweenGwEnabled);
     while (currentCpeCount < cpeMaxCount) {
       for (int i = 0; i < repeatsCount; i++) {
-        log.info("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
+        log.debug("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
         final MutableNetwork<Node, ParallelEdges> network =
             simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled);
         log.trace("network is simulated, network: {}", network);

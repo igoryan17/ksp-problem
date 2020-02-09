@@ -1,5 +1,6 @@
 package com.igoryan.ksp.impl;
 
+import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -25,8 +26,10 @@ public final class MpsKShortestPathsCalculator extends BaseMpsKShortestPathCalcu
   @Override
   public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
       final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
-    final boolean dstChanged = lastDst != dst;
-    if (dstChanged) {
+    if (cachedTransposedNetwork == null) {
+      cachedTransposedNetwork = Graphs.transpose(network);
+    }
+    if (lastDst != dst) {
       lastDst = dst;
       cachedShortestPathTree = calculateShortestPathTree(src, dst, network);
       fillEdgesStructure(network);

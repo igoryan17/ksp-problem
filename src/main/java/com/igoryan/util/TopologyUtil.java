@@ -74,11 +74,15 @@ public final class TopologyUtil {
           continue;
         }
         final Node dstGw = swNumToNode.get(dstGwNum);
-        final Edge betweenGateways =
-            new Edge(srcGwNum, (short) srcGwNum, dstGwNum, (short) dstGwNum,
-                randomForWeights.nextInt(MAX_WEIGHT_BETWEEN_GATEWAYS) + 1);
-        final ParallelEdges gwEdges = new ParallelEdges(srcGwNum, dstGwNum, 1);
-        gwEdges.add(betweenGateways);
+        final int parallelLinksCount =
+            randomForParallelLinksCount.nextInt(MAX_LINKS - MIN_LINKS + 1) + MIN_LINKS;
+        final ParallelEdges gwEdges = new ParallelEdges(srcGwNum, dstGwNum, parallelLinksCount);
+        for (int i = 0; i < parallelLinksCount; i++) {
+          final Edge betweenGateways =
+              new Edge(srcGwNum, (short) (srcGwNum + i), dstGwNum, ((short) (dstGwNum + i)),
+                  randomForWeights.nextInt(MAX_WEIGHT_BETWEEN_GATEWAYS) + 1);
+          gwEdges.add(betweenGateways);
+        }
         result.addEdge(srcGw, dstGw, gwEdges);
       }
     }

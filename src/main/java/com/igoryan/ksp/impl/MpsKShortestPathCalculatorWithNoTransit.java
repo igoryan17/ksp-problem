@@ -36,14 +36,18 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
       subNetworkWithoutInEdgesToNoTransit = subNetworkExpectInEdgesOfNoTransit(network);
       needCheckCycles = Graphs.hasCycle(subNetworkWithoutInEdgesToNoTransit);
     }
+    if (cachedTransposedNetwork == null) {
+      cachedTransposedNetwork = Graphs.transpose(network);
+    }
     if (lastDst != dst) {
       if (lastDst != null) {
         cachedEdgesStructure.clear();
         removeInEdges(lastDst, subNetworkWithoutInEdgesToNoTransit);
       }
       lastDst = dst;
-      cachedShortestPathTree = calculateShortestPathTree(src, dst, network);
       addInEdges(dst, subNetworkWithoutInEdgesToNoTransit, network);
+      cachedShortestPathTree =
+          calculateShortestPathTree(src, dst, subNetworkWithoutInEdgesToNoTransit);
       fillEdgesStructure(subNetworkWithoutInEdgesToNoTransit);
     }
     return performMpsAlgorithm(src, dst, count);

@@ -18,7 +18,6 @@ public abstract class BaseShortestPathsTree<T extends ShortestPath> {
   protected final Map<Integer, Node> swNumToNode;
   @Getter
   protected final Map<Integer, Node> swNumToOriginalNode;
-  protected final Map<Node, T> cachedShortestPaths = new HashMap<>();
   protected final Map<Node, List<Edge>> cachedPaths = new HashMap<>();
 
   protected final Class<T> clazz;
@@ -54,7 +53,6 @@ public abstract class BaseShortestPathsTree<T extends ShortestPath> {
   @Nullable
   public T getShortestPath(final int dstSwNum) {
     final Node dstNode = swNumToNode.get(dstSwNum);
-    return dstNode == null ? null : cachedShortestPaths
-        .computeIfAbsent(dstNode, this::buildShortestPath);
+    return dstNode == null ? null : buildShortestPath(dstNode);
   }
 }

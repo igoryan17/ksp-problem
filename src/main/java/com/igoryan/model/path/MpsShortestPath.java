@@ -22,6 +22,8 @@ public class MpsShortestPath extends ShortestPath {
   private final Map<Node, Integer> nodeToIndex;
   private final transient NodeEdgeTuple[] keys;
 
+  @Getter
+  private transient NodeEdgeTuple deviationNode;
   private transient Set<Integer> uniqueVertexes;
   private transient long originalCost;
   private transient int hash;
@@ -176,6 +178,12 @@ public class MpsShortestPath extends ShortestPath {
       hash = h;
     }
     return h;
+  }
+
+  public void setDeviationNodeIfAbsent(final NodeEdgeTuple deviationNode) {
+    if (this.deviationNode == null) {
+      this.deviationNode = deviationNode;
+    }
   }
 
   public static Builder builder() {

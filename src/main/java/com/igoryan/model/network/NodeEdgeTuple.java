@@ -1,6 +1,5 @@
 package com.igoryan.model.network;
 
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
@@ -11,8 +10,6 @@ public final class NodeEdgeTuple {
   private final Node node;
   @Getter
   private final Edge edge;
-  @Getter
-  private final Map<Integer, NodeEdgeTuple> pathNumToNextKey = new HashMap<>();
   @Getter
   @Setter
   private Map<NodeEdgeTuple, NodeEdgeTuple> children;

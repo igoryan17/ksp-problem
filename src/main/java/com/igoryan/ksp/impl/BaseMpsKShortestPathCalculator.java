@@ -3,13 +3,13 @@ package com.igoryan.ksp.impl;
 import static java.util.Collections.emptyList;
 
 import com.google.common.graph.EndpointPair;
-import com.google.common.graph.Graphs;
 import com.google.common.graph.Network;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.NodeEdgeTuple;
 import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.SortedParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
 import com.igoryan.model.path.ShortestPathCreator;
 import com.igoryan.model.tree.KShortestPathsTree;
@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.stream.Collectors;
 import org.apache.logging.log4j.Logger;
 
@@ -35,14 +34,10 @@ public abstract class BaseMpsKShortestPathCalculator
 
   protected static final Comparator<MpsShortestPath> COMPARE_SHORTEST_PATHS_BY_COST =
       Comparator.comparingLong(MpsShortestPath::getOriginalCost);
-  protected static final Comparator<Edge> COMPARE_EDGES_BY_REDUCED_COST_AND_PORTS =
-      Comparator.comparingLong(Edge::getReducedCost)
-          .thenComparingInt(Edge::getSrcPort)
-          .thenComparingInt(Edge::getDstPort);
   protected static final ShortestPathCreator<MpsShortestPath>
       MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR = MpsShortestPath::new;
   protected final ShortestPathCalculator shortestPathCalculator;
-  protected final Map<Integer, TreeSet<Edge>> cachedEdgesStructure = new HashMap<>();
+  protected final Map<Integer, SortedParallelEdges> cachedEdgesStructure = new HashMap<>();
   protected final Map<Integer, Node> swNumToNode = new HashMap<>();
   protected ReversedShortestPathTree<MpsShortestPath> cachedShortestPathTree;
   protected Node lastDst;
@@ -56,18 +51,16 @@ public abstract class BaseMpsKShortestPathCalculator
 
   protected ReversedShortestPathTree<MpsShortestPath> calculateShortestPathTree(final Node src,
       final Node dst, final Network<Node, ParallelEdges> network) {
-    if (cachedTransposedNetwork == null) {
-      cachedTransposedNetwork = Graphs.transpose(network);
-    }
     shortestPathCalculator.calculate(dst, src, cachedTransposedNetwork);
     calcReducedCost(network);
     return ShortestPathsUtil.buildRevertedRecursively(MpsShortestPath.class, dst,
-        MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, cachedTransposedNetwork.nodes());
+        MPS_SHORTEST_PATH_SHORTEST_PATH_CREATOR, network.nodes());
   }
 
   protected List<MpsShortestPath> performMpsAlgorithm(final Node src, final Node dst,
       final int count) {
     log().debug("calc {} shortest paths; src: {}, dst: {}", count, src, dst);
+    final KShortestPathsTree candidatesKShortestPathsTree = new KShortestPathsTree();
     final Queue<MpsShortestPath> candidates = new PriorityQueue<>(COMPARE_SHORTEST_PATHS_BY_COST);
     final MpsShortestPath firstShortestPath =
         cachedShortestPathTree.getShortestPath(src.getSwNum());
@@ -75,23 +68,19 @@ public abstract class BaseMpsKShortestPathCalculator
       return emptyList();
     }
     candidates.add(firstShortestPath);
+    candidatesKShortestPathsTree.add(firstShortestPath);
     int currentCount = 0;
     final List<MpsShortestPath> result = new ArrayList<>();
-    final KShortestPathsTree kShortestPathsTree = new KShortestPathsTree();
     while (!candidates.isEmpty() && currentCount <= count) {
       final MpsShortestPath shortestPath = candidates.poll();
       log().trace("candiadate for {} shortest path is found; path: {}", currentCount + 1,
           shortestPath);
-      final NodeEdgeTuple nodeEdgeTuple = kShortestPathsTree.getDeviationKey(shortestPath);
+      final NodeEdgeTuple nodeEdgeTuple = Objects.requireNonNull(shortestPath.getDeviationNode());
       log().trace("deviation key of candidate is calculated; key: {}", nodeEdgeTuple);
       if (!needCheckCycles || shortestPath.withoutLoops()) {
         currentCount++;
         result.add(shortestPath);
-        kShortestPathsTree.add(shortestPath, count - 1);
         log().trace("{} shortest path is found; path: {}", currentCount, shortestPath);
-      }
-      if (nodeEdgeTuple == null) {
-        continue;
       }
       Node deviationNode = nodeEdgeTuple.getNode();
       MpsShortestPath toDeviationNode;
@@ -100,7 +89,7 @@ public abstract class BaseMpsKShortestPathCalculator
       do {
         deviationNode = shortestPath.getNodes().get(nodeIndex);
         log().trace("loop of deviation nodes: node: {}", deviationNode);
-        final TreeSet<Edge> sortedParallelEdges =
+        final SortedParallelEdges sortedParallelEdges =
             cachedEdgesStructure.get(deviationNode.getSwNum());
         toDeviationNode = shortestPath.subPath(nodeIndex);
         if (sortedParallelEdges == null) {
@@ -115,7 +104,10 @@ public abstract class BaseMpsKShortestPathCalculator
         final Edge deviationEdgeOfShortestPath = shortestPath.getEdges().get(nodeIndex);
         log().trace("find edges less than edge of shortest path, deviationEdgeOfShortestPath: {}",
             deviationEdgeOfShortestPath);
-        for (Edge edge : sortedParallelEdges.tailSet(deviationEdgeOfShortestPath, false)) {
+        final List<Edge> sortedEdges = sortedParallelEdges.getSortedEdges();
+        for (int i = sortedParallelEdges.getIndex(shortestPath.getEdges().get(nodeIndex)) + 1;
+            i < sortedEdges.size(); i++) {
+          final Edge edge = sortedEdges.get(i);
           if (needCheckCycles && toDeviationNode.formsCycle(edge)) {
             continue;
           }
@@ -133,7 +125,9 @@ public abstract class BaseMpsKShortestPathCalculator
             .from(toDeviationNode);
         if (targetNodeOfDeviationEdge == dst) {
           log().trace("target of deviation edge is dst; edge: {}", deviationEdge);
-          candidates.add(builder.append(deviationEdge, dst).build());
+          final MpsShortestPath candidate = builder.append(deviationEdge, dst).build();
+          candidates.add(candidate);
+          candidatesKShortestPathsTree.add(candidate);
           nodeIndex++;
           continue;
         }
@@ -145,11 +139,12 @@ public abstract class BaseMpsKShortestPathCalculator
           nodeIndex++;
           continue;
         }
-        candidates.add(builder
+        final MpsShortestPath candidate = builder
             .append(deviationEdge, targetNodeOfDeviationEdge)
             .append(fromHeadOfDeviationEdgeToDst, cachedShortestPathTree.getSwNumToOriginalNode())
-            .build()
-        );
+            .build();
+        candidates.add(candidate);
+        candidatesKShortestPathsTree.add(candidate);
         nodeIndex++;
       } while (Objects.requireNonNull(toDeviationNode).withoutLoops()
           && nodeIndex < indexOfTarget);
@@ -186,9 +181,7 @@ public abstract class BaseMpsKShortestPathCalculator
       if (notSortedEdges.isEmpty()) {
         continue;
       }
-      final TreeSet<Edge> sortedParallelEdges = new TreeSet<>(
-          COMPARE_EDGES_BY_REDUCED_COST_AND_PORTS);
-      sortedParallelEdges.addAll(notSortedEdges);
+      final SortedParallelEdges sortedParallelEdges = new SortedParallelEdges(notSortedEdges);
       cachedEdgesStructure.put(node.getSwNum(), sortedParallelEdges);
     }
   }
@@ -201,7 +194,7 @@ public abstract class BaseMpsKShortestPathCalculator
     swNumToNode.clear();
     needCheckCycles = true;
     cachedShortestPathTree = null;
-    lastDst = null;
     cachedTransposedNetwork = null;
+    lastDst = null;
   }
 }
