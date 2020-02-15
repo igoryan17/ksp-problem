@@ -1,29 +1,28 @@
 package com.igoryan.model.path;
 
-import static java.util.Collections.singletonMap;
-
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.NodeEdgeTuple;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
 
 public class MpsShortestPath extends ShortestPath {
 
-  @Getter
-  private final Map<Node, Integer> nodeToIndex;
   private final transient NodeEdgeTuple[] keys;
+  private final transient Map<Integer, Set<Integer>> uniqueVertexesOfSubPath = new HashMap<>();
 
   @Getter
-  private transient NodeEdgeTuple deviationNode;
+  private transient int deviationNodeIndex = -1;
   private transient Set<Integer> uniqueVertexes;
   private transient long originalCost;
   private transient int hash;
@@ -35,10 +34,6 @@ public class MpsShortestPath extends ShortestPath {
     super(src, dst, edges, nodes, edges.stream().mapToLong(Edge::getReducedCost).sum(),
         Edge::getReducedCost);
     this.keys = new NodeEdgeTuple[edges.size()];
-    this.nodeToIndex = new HashMap<>(nodes.size());
-    for (int i = 0; i < nodes.size(); i++) {
-      nodeToIndex.put(nodes.get(i), i);
-    }
   }
 
   public MpsShortestPath(final @NonNull Node src,
@@ -48,10 +43,6 @@ public class MpsShortestPath extends ShortestPath {
       final long cost) {
     super(src, dst, edges, nodes, cost, Edge::getReducedCost);
     this.keys = new NodeEdgeTuple[edges.size()];
-    this.nodeToIndex = new HashMap<>(nodes.size());
-    for (int i = 0; i < nodes.size(); i++) {
-      nodeToIndex.put(nodes.get(i), i);
-    }
   }
 
   public MpsShortestPath(final @NonNull Node src,
@@ -62,10 +53,6 @@ public class MpsShortestPath extends ShortestPath {
       final @NonNull NodeEdgeTuple[] keys) {
     super(src, dst, edges, nodes, reducedCost, Edge::getReducedCost);
     this.keys = keys;
-    this.nodeToIndex = new HashMap<>(nodes.size());
-    for (int i = 0; i < nodes.size(); i++) {
-      nodeToIndex.put(nodes.get(i), i);
-    }
   }
 
   public MpsShortestPath(final @NonNull Node src,
@@ -74,19 +61,16 @@ public class MpsShortestPath extends ShortestPath {
       final @NonNull List<Node> nodes,
       final long reducedCost,
       final @NonNull long[] edgesCostCache,
-      final @NonNull NodeEdgeTuple[] keys) {
+      final @NonNull NodeEdgeTuple[] keys,
+      final @Nullable Set<Integer> uniqueVertexes) {
     super(src, dst, edges, nodes, reducedCost, Edge::getReducedCost, edgesCostCache);
     this.keys = keys;
-    this.nodeToIndex = new HashMap<>(nodes.size());
-    for (int i = 0; i < nodes.size(); i++) {
-      nodeToIndex.put(nodes.get(i), i);
-    }
+    this.uniqueVertexes = uniqueVertexes;
   }
 
   public MpsShortestPath(final @NonNull Node srcAndDst) {
     super(srcAndDst, Edge::getReducedCost);
     this.keys = null;
-    this.nodeToIndex = singletonMap(srcAndDst, 0);
   }
 
   public boolean withoutLoops() {
@@ -113,10 +97,6 @@ public class MpsShortestPath extends ShortestPath {
     return result;
   }
 
-  public int getIndex(final @NonNull Node node) {
-    return Objects.requireNonNull(nodeToIndex.get(node));
-  }
-
   public NodeEdgeTuple getKey(int nodeIndex) {
     assert nodeIndex >= 0;
     assert nodeIndex <= edges.size();
@@ -136,7 +116,26 @@ public class MpsShortestPath extends ShortestPath {
     }
     return new MpsShortestPath(this.src, this.nodes.get(i), this.edges.subList(0, i),
         this.nodes.subList(0, i + 1), getEdgesCost(i),
-        Arrays.copyOfRange(edgesCostCache, 0, i), Arrays.copyOfRange(keys, 0, i));
+        Arrays.copyOfRange(edgesCostCache, 0, i), Arrays.copyOfRange(keys, 0, i),
+        uniqueVertexesOfSubPath.get(i));
+  }
+
+  public boolean formsCycle(final @NonNull Edge edge, int deviationNodeIndex) {
+    final Set<Integer> uniqueVertexes =
+        uniqueVertexesOfSubPath.computeIfAbsent(deviationNodeIndex, k -> {
+          final Set<Integer> previous = uniqueVertexesOfSubPath.get(k - 1);
+          final Set<Integer> result;
+          if (previous == null) {
+            result = nodes.subList(0, deviationNodeIndex).stream()
+                .map(Node::getSwNum)
+                .collect(Collectors.toSet());
+          } else {
+            result = new HashSet<>(previous);
+            result.add(nodes.get(k).getSwNum());
+          }
+          return result;
+        });
+    return uniqueVertexes.contains(edge.getDstSwNum());
   }
 
   public MpsShortestPath append(final @NonNull MpsShortestPath shortestPath) {
@@ -180,9 +179,9 @@ public class MpsShortestPath extends ShortestPath {
     return h;
   }
 
-  public void setDeviationNodeIfAbsent(final NodeEdgeTuple deviationNode) {
-    if (this.deviationNode == null) {
-      this.deviationNode = deviationNode;
+  public void setDeviationNodeIndex(final int deviationNode) {
+    if (this.deviationNodeIndex == -1) {
+      this.deviationNodeIndex = deviationNode;
     }
   }
 

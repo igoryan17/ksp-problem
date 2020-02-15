@@ -7,7 +7,6 @@ import com.google.common.graph.Network;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.NodeEdgeTuple;
 import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.network.SortedParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
@@ -22,7 +21,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
@@ -60,7 +58,6 @@ public abstract class BaseMpsKShortestPathCalculator
   protected List<MpsShortestPath> performMpsAlgorithm(final Node src, final Node dst,
       final int count) {
     log().debug("calc {} shortest paths; src: {}, dst: {}", count, src, dst);
-    final KShortestPathsTree candidatesKShortestPathsTree = new KShortestPathsTree();
     final Queue<MpsShortestPath> candidates = new PriorityQueue<>(COMPARE_SHORTEST_PATHS_BY_COST);
     final MpsShortestPath firstShortestPath =
         cachedShortestPathTree.getShortestPath(src.getSwNum());
@@ -68,47 +65,51 @@ public abstract class BaseMpsKShortestPathCalculator
       return emptyList();
     }
     candidates.add(firstShortestPath);
-    candidatesKShortestPathsTree.add(firstShortestPath);
     int currentCount = 0;
-    final List<MpsShortestPath> result = new ArrayList<>();
+    final List<MpsShortestPath> result = new ArrayList<>(count);
+    final KShortestPathsTree candidatesKShortestPathsTree = new KShortestPathsTree();
     while (!candidates.isEmpty() && currentCount <= count) {
       final MpsShortestPath shortestPath = candidates.poll();
-      log().trace("candiadate for {} shortest path is found; path: {}", currentCount + 1,
+      candidatesKShortestPathsTree.add(shortestPath);
+      log().trace("candidate for {} shortest path is found; path: {}", currentCount + 1,
           shortestPath);
-      final NodeEdgeTuple nodeEdgeTuple = Objects.requireNonNull(shortestPath.getDeviationNode());
-      log().trace("deviation key of candidate is calculated; key: {}", nodeEdgeTuple);
+      int deviationNodeIndex = shortestPath.getDeviationNodeIndex();
+      assert deviationNodeIndex >= 0;
+      log().trace("deviation key of candidate is calculated; key: {}", deviationNodeIndex);
       if (!needCheckCycles || shortestPath.withoutLoops()) {
         currentCount++;
         result.add(shortestPath);
         log().trace("{} shortest path is found; path: {}", currentCount, shortestPath);
+        if (currentCount >= count) {
+          break;
+        }
       }
-      Node deviationNode = nodeEdgeTuple.getNode();
-      MpsShortestPath toDeviationNode;
-      int indexOfTarget = shortestPath.getIndex(shortestPath.getDst());
-      int nodeIndex = shortestPath.getIndex(deviationNode);
-      do {
-        deviationNode = shortestPath.getNodes().get(nodeIndex);
+      int indexOfTarget = shortestPath.getNodes().size() - 1;
+      MpsShortestPath toDeviationNode = shortestPath.subPath(deviationNodeIndex);
+      while ((!needCheckCycles || toDeviationNode.withoutLoops())
+          && deviationNodeIndex < indexOfTarget) {
+        final Node deviationNode = shortestPath.getNodes().get(deviationNodeIndex);
         log().trace("loop of deviation nodes: node: {}", deviationNode);
         final SortedParallelEdges sortedParallelEdges =
             cachedEdgesStructure.get(deviationNode.getSwNum());
-        toDeviationNode = shortestPath.subPath(nodeIndex);
         if (sortedParallelEdges == null) {
           log().warn("there is not edges structure of deviation node; deviationNode: {}",
               deviationNode);
-          nodeIndex++;
+          deviationNodeIndex++;
+          toDeviationNode = shortestPath.subPath(deviationNodeIndex);
           continue;
         }
         log().trace("out edges of deviation node; deviationNode: {}, edges: {}", deviationNode,
             sortedParallelEdges);
         Edge deviationEdge = null;
-        final Edge deviationEdgeOfShortestPath = shortestPath.getEdges().get(nodeIndex);
+        final Edge deviationEdgeOfShortestPath = shortestPath.getEdges().get(deviationNodeIndex);
         log().trace("find edges less than edge of shortest path, deviationEdgeOfShortestPath: {}",
             deviationEdgeOfShortestPath);
         final List<Edge> sortedEdges = sortedParallelEdges.getSortedEdges();
-        for (int i = sortedParallelEdges.getIndex(shortestPath.getEdges().get(nodeIndex)) + 1;
+        for (int i = sortedParallelEdges.getIndex(deviationEdgeOfShortestPath) + 1;
             i < sortedEdges.size(); i++) {
           final Edge edge = sortedEdges.get(i);
-          if (needCheckCycles && toDeviationNode.formsCycle(edge)) {
+          if (needCheckCycles && shortestPath.formsCycle(edge, deviationNodeIndex)) {
             continue;
           }
           deviationEdge = edge;
@@ -117,7 +118,8 @@ public abstract class BaseMpsKShortestPathCalculator
         log().trace("deviation edge is calculated; deviationNode: {}, edge: {}", deviationNode,
             deviationEdge);
         if (deviationEdge == null) {
-          nodeIndex++;
+          deviationNodeIndex++;
+          toDeviationNode = shortestPath.subPath(deviationNodeIndex);
           continue;
         }
         final Node targetNodeOfDeviationEdge = swNumToNode.get(deviationEdge.getDstSwNum());
@@ -125,10 +127,11 @@ public abstract class BaseMpsKShortestPathCalculator
             .from(toDeviationNode);
         if (targetNodeOfDeviationEdge == dst) {
           log().trace("target of deviation edge is dst; edge: {}", deviationEdge);
-          final MpsShortestPath candidate = builder.append(deviationEdge, dst).build();
-          candidates.add(candidate);
-          candidatesKShortestPathsTree.add(candidate);
-          nodeIndex++;
+          candidates.add(builder
+              .append(deviationEdge, dst)
+              .build());
+          deviationNodeIndex++;
+          toDeviationNode = shortestPath.subPath(deviationNodeIndex);
           continue;
         }
         final List<Edge> fromHeadOfDeviationEdgeToDst =
@@ -136,18 +139,17 @@ public abstract class BaseMpsKShortestPathCalculator
         log().trace("path from head of deviation node to dst is calculated; path: {}",
             fromHeadOfDeviationEdgeToDst);
         if (fromHeadOfDeviationEdgeToDst.isEmpty()) {
-          nodeIndex++;
+          deviationNodeIndex++;
+          toDeviationNode = shortestPath.subPath(deviationNodeIndex);
           continue;
         }
-        final MpsShortestPath candidate = builder
+        candidates.add(builder
             .append(deviationEdge, targetNodeOfDeviationEdge)
             .append(fromHeadOfDeviationEdgeToDst, cachedShortestPathTree.getSwNumToOriginalNode())
-            .build();
-        candidates.add(candidate);
-        candidatesKShortestPathsTree.add(candidate);
-        nodeIndex++;
-      } while (Objects.requireNonNull(toDeviationNode).withoutLoops()
-          && nodeIndex < indexOfTarget);
+            .build());
+        deviationNodeIndex++;
+        toDeviationNode = shortestPath.subPath(deviationNodeIndex);
+      }
     }
     return result;
   }

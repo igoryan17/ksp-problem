@@ -14,7 +14,7 @@ public class KShortestPathsTree {
     final NodeEdgeTuple firstKey = path.getKey(0);
     NodeEdgeTuple temp = connectionsOfRoot.putIfAbsent(firstKey, firstKey);
     if (temp == null) {
-      path.setDeviationNodeIfAbsent(firstKey);
+      path.setDeviationNodeIndex(0);
       temp = firstKey;
     }
     for (int i = 1; i < path.getEdges().size(); i++) {
@@ -27,7 +27,7 @@ public class KShortestPathsTree {
       final NodeEdgeTuple old = children.putIfAbsent(key, key);
       final NodeEdgeTuple next;
       if (old == null) {
-        path.setDeviationNodeIfAbsent(key);
+        path.setDeviationNodeIndex(i);
         next = key;
       } else {
         next = old;
