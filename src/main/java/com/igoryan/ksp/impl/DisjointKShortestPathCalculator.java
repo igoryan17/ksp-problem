@@ -46,12 +46,11 @@ public class DisjointKShortestPathCalculator extends BaseYenKShortestPathsCalcul
       markPathAsUsed(network, shortestPath);
       result.add(shortestPath);
     }
+    clearMarkedEdges(network);
     if (result.size() == count) {
-      clearMarkedEdges(network);
       return result;
     }
     performYenAlgorithm(dst, network, count - result.size() + 1, result);
-    clearMarkedEdges(network);
     return result;
   }
 
