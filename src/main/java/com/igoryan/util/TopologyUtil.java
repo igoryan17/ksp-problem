@@ -5,6 +5,7 @@ import com.google.common.graph.NetworkBuilder;
 import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.ParallelEdges;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -21,7 +22,8 @@ public final class TopologyUtil {
   }
 
   public static MutableNetwork<Node, ParallelEdges> simulateSdWanTopology(
-      int gwCount, int cpeCount, final boolean linksBetweenGwEnabled) {
+      final int gwCount, final int cpeCount, final boolean linksBetweenGwEnabled,
+      final Comparator<Edge> edgeComparator) {
     final Random randomForWeights = new Random();
     final Random randomForParallelLinksCount = new Random();
     final Map<Integer, Node> swNumToNode = new HashMap<>();
@@ -45,9 +47,9 @@ public final class TopologyUtil {
         final int parallelLinksCount =
             randomForParallelLinksCount.nextInt(MAX_LINKS - MIN_LINKS + 1) + MIN_LINKS;
         final ParallelEdges parallelEdgesToGw =
-            new ParallelEdges(cpeNum, gwNum, parallelLinksCount);
+            new ParallelEdges(cpeNum, gwNum, parallelLinksCount, edgeComparator);
         final ParallelEdges fromGwParallelEdges =
-            new ParallelEdges(gwNum, cpeNum, parallelLinksCount);
+            new ParallelEdges(gwNum, cpeNum, parallelLinksCount, edgeComparator);
         for (int i = 0; i < parallelLinksCount; i++) {
           final Edge cpeGw = new Edge(cpeNum, (short) (cpeNum + i), gwNum,
               (short) (gwNum + cpeNum + i),
@@ -76,7 +78,8 @@ public final class TopologyUtil {
         final Node dstGw = swNumToNode.get(dstGwNum);
         final int parallelLinksCount =
             randomForParallelLinksCount.nextInt(MAX_LINKS - MIN_LINKS + 1) + MIN_LINKS;
-        final ParallelEdges gwEdges = new ParallelEdges(srcGwNum, dstGwNum, parallelLinksCount);
+        final ParallelEdges gwEdges =
+            new ParallelEdges(srcGwNum, dstGwNum, parallelLinksCount, edgeComparator);
         for (int i = 0; i < parallelLinksCount; i++) {
           final Edge betweenGateways =
               new Edge(srcGwNum, (short) (srcGwNum + i), dstGwNum, ((short) (dstGwNum + i)),

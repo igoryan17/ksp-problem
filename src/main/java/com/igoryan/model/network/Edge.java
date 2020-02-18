@@ -19,7 +19,10 @@ public final class Edge {
   private final long cost;
   @Getter
   @Setter
-  private transient long reducedCost;
+  private long reducedCost;
+  @Getter
+  @Setter
+  private boolean isUsed;
   private transient int hash;
 
   @Override

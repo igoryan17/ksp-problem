@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 abstract class BaseYenKShortestPathsCalculator
     implements KShortestPathsCalculator<YenShortestPath> {
@@ -27,8 +28,7 @@ abstract class BaseYenKShortestPathsCalculator
       (src, dst, edges, nodes) -> new YenShortestPath(src, dst, edges, nodes, dst.getDistance());
 
   protected final Map<Integer, ShortestPathsTree<YenShortestPath>>
-      srcSwNumToCachedShortestPathTree =
-      new HashMap<>();
+      srcSwNumToCachedShortestPathTree = new HashMap<>();
 
   protected final ShortestPathCalculator shortestPathCalculator;
 
@@ -37,6 +37,7 @@ abstract class BaseYenKShortestPathsCalculator
     this.shortestPathCalculator = shortestPathCalculator;
   }
 
+  @Nullable
   protected YenShortestPath getFirstShortestPath(final Node src, final Node dst,
       final MutableNetwork<Node, ParallelEdges> network) {
     final ShortestPathsTree<YenShortestPath> pathsTree =
@@ -122,27 +123,35 @@ abstract class BaseYenKShortestPathsCalculator
           parallelEdges.addAll(edges);
         });
       }
-      boolean isNewPath;
-      YenShortestPath kthPath;
-      do {
-        kthPath = storage.poll();
-        isNewPath = true;
-        if (kthPath != null) {
-          for (ShortestPath p : result) {
-            // Check to see if this candidate path duplicates a previously found path
-            // compare by hash code firstly to fast
-            if (p.hashCode() == kthPath.hashCode() && p.equals(kthPath)) {
-              isNewPath = false;
-              break;
-            }
-          }
-        }
-      } while (!isNewPath);
+      YenShortestPath kthPath = findKstShortestPathInCandidates(result, storage);
       if (kthPath == null) {
         break;
       }
-      result.add(kthPath);
+      result.add(k, kthPath);
     }
+  }
+
+  @Nullable
+  protected YenShortestPath findKstShortestPathInCandidates(
+      final List<YenShortestPath> result,
+      final MinMaxPriorityQueue<YenShortestPath> storage) {
+    boolean isNewPath;
+    YenShortestPath kthPath;
+    do {
+      kthPath = storage.poll();
+      isNewPath = true;
+      if (kthPath != null) {
+        for (ShortestPath p : result) {
+          // Check to see if this candidate path duplicates a previously found path
+          // compare by hash code firstly to fast
+          if (p.hashCode() == kthPath.hashCode() && p.equals(kthPath)) {
+            isNewPath = false;
+            break;
+          }
+        }
+      }
+    } while (!isNewPath);
+    return kthPath;
   }
 
   @Override

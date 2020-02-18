@@ -10,11 +10,15 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import lombok.Getter;
+import lombok.NonNull;
 
 public final class ParallelEdges implements Queue<Edge> {
 
-  private static final Comparator<Edge> COMPARE_EDGES_BY_COST =
+  public static final Comparator<Edge> COMPARE_EDGES_BY_COST =
       Comparator.comparingLong(Edge::getCost);
+  public static final Comparator<Edge> COMPARE_EDGES_BY_USED_AND_COST =
+      Comparator.comparing(Edge::isUsed, (o1, o2) -> o1 == o2 ? 0 : o1 ? 1 : -1)
+          .thenComparingLong(Edge::getCost);
 
   @Getter
   private final int srcSwNum;
@@ -23,16 +27,18 @@ public final class ParallelEdges implements Queue<Edge> {
   private final Queue<Edge> edges;
   private transient int hash;
 
-  public ParallelEdges(final int srcSwNum, final int dstSwNum) {
+  public ParallelEdges(final int srcSwNum, final int dstSwNum,
+      final @NonNull Comparator<Edge> comparator) {
     this.srcSwNum = srcSwNum;
     this.dstSwNum = dstSwNum;
-    this.edges = new PriorityQueue<>(COMPARE_EDGES_BY_COST);
+    this.edges = new PriorityQueue<>(comparator);
   }
 
-  public ParallelEdges(final int srcSwNum, final int dstSwNum, int capacity) {
+  public ParallelEdges(final int srcSwNum, final int dstSwNum, int capacity,
+      final Comparator<Edge> comparator) {
     this.srcSwNum = srcSwNum;
     this.dstSwNum = dstSwNum;
-    this.edges = new PriorityQueue<>(capacity, COMPARE_EDGES_BY_COST);
+    this.edges = new PriorityQueue<>(capacity, comparator);
   }
 
   @Override

@@ -1,5 +1,8 @@
 package com.igoryan;
 
+import static com.igoryan.model.Algorithms.DISJOINT;
+import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_COST;
+import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_USED_AND_COST;
 import static com.igoryan.util.TopologyUtil.simulateSdWanTopology;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -69,6 +72,15 @@ public class App {
           modules.add(new MpsModule());
         }
         break;
+      case DISJOINT:
+        if (withNoTransit) {
+          modules.add(new DijkstraWithNoTransitModule());
+          modules.add(new DisjointWithNoTransitModule());
+        } else {
+          modules.add(new DijkstraModule());
+          modules.add(new DisjointModule());
+        }
+        break;
       case NAIVE:
         if (withNoTransit) {
           modules.add(new DijkstraModule());
@@ -112,7 +124,8 @@ public class App {
       for (int i = 0; i < repeatsCount; i++) {
         log.debug("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
         final MutableNetwork<Node, ParallelEdges> network =
-            simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled);
+            simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled,
+                algorithm == DISJOINT ? COMPARE_EDGES_BY_USED_AND_COST : COMPARE_EDGES_BY_COST);
         log.trace("network is simulated, network: {}", network);
         final Stopwatch stopwatch = Stopwatch.createStarted();
         allPairsCalculator.calculate(network, pathsPerPair);
