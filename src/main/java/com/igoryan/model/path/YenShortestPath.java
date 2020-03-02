@@ -1,13 +1,16 @@
 package com.igoryan.model.path;
 
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
+import com.igoryan.model.network.edge.Edge;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import lombok.NonNull;
 
 public class YenShortestPath extends ShortestPath {
+
+  public static final ShortestPathCreator<YenShortestPath> YEN_SHORTEST_PATH_CREATOR =
+      (src, dst, edges, nodes) -> new YenShortestPath(src, dst, edges, nodes, dst.getDistance());
 
   private final transient int[] edgesHashes;
   private transient int hash;

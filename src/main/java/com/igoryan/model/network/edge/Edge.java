@@ -1,11 +1,19 @@
-package com.igoryan.model.network;
+package com.igoryan.model.network.edge;
 
+import java.util.Comparator;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @RequiredArgsConstructor
 public final class Edge {
+
+  public static final Comparator<Edge> COMPARE_EDGES_BY_COST =
+      Comparator.comparingLong(Edge::getCost);
+  public static final Comparator<Edge> COMPARE_EDGES_BY_COST_AND_PORTS = Comparator
+      .comparingLong(Edge::getCost)
+      .thenComparing(Edge::getSrcPort, Short::compareTo)
+      .thenComparing(Edge::getDstPort, Short::compareTo);
 
   @Getter
   private final int srcSwNum;

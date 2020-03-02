@@ -8,8 +8,9 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.List;
@@ -25,13 +26,13 @@ public final class MpsKShortestPathCalculatorWithNoTransit extends BaseMpsKShort
 
   @Inject
   public MpsKShortestPathCalculatorWithNoTransit(
-      final ShortestPathCalculator shortestPathCalculator) {
+      final @Named("noTransit") ShortestPathCalculator shortestPathCalculator) {
     super(shortestPathCalculator);
   }
 
   @Override
   public List<MpsShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
-      final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
+      final MutableNetwork<Node, ParallelEdges> network, final int count) {
     if (subNetworkWithoutInEdgesToNoTransit == null) {
       subNetworkWithoutInEdgesToNoTransit = subNetworkExpectInEdgesOfNoTransit(network);
       needCheckCycles = Graphs.hasCycle(subNetworkWithoutInEdgesToNoTransit);

@@ -2,6 +2,7 @@ package com.igoryan.model.network;
 
 import static java.util.Collections.unmodifiableList;
 
+import com.igoryan.model.network.edge.Edge;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;

@@ -2,8 +2,8 @@ package com.igoryan.model.tree;
 
 import static java.util.Collections.emptyList;
 
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
+import com.igoryan.model.network.edge.Edge;
 import com.igoryan.model.path.ShortestPath;
 import com.igoryan.model.path.ShortestPathCreator;
 import java.util.HashMap;

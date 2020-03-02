@@ -1,8 +1,5 @@
 package com.igoryan;
 
-import static com.igoryan.model.Algorithms.DISJOINT;
-import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_COST;
-import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_USED_AND_COST;
 import static com.igoryan.util.TopologyUtil.simulateSdWanTopology;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -14,8 +11,9 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.igoryan.apsp.AllPairsCalculator;
 import com.igoryan.model.Algorithms;
+import com.igoryan.model.CostGenerations;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +28,7 @@ import lombok.extern.log4j.Log4j2;
 public class App {
 
   private static final String ALGORITHM_PROPERTY = "algorithm";
+  private static final String COST_PROPERTY = "topology.link.cost.generation";
   private static final String TOPOLOGY_WITH_NO_TRANSIT_PROPERTY = "topology.no_transit";
   private static final String GW_COUNT_PROPERTY = "topology.gw.count";
   private static final String LINK_BETWEEN_GW_ENABLED_PROPERTY = "topology.gw.link.enabled";
@@ -49,17 +48,20 @@ public class App {
 
     final Algorithms algorithm =
         Algorithms.valueOf(getSystemPropertyOrDefaultOfApp(appProperties, ALGORITHM_PROPERTY));
+    final CostGenerations costGeneration =
+        CostGenerations
+            .valueOf(getSystemPropertyOrDefaultOfApp(appProperties, COST_PROPERTY).toUpperCase());
     final boolean withNoTransit =
         Boolean.parseBoolean(
             getSystemPropertyOrDefaultOfApp(appProperties, TOPOLOGY_WITH_NO_TRANSIT_PROPERTY));
     final List<Module> modules = new ArrayList<>();
     switch (algorithm) {
       case YEN:
+        modules.add(new DijkstraWithNoTransitModule());
+        modules.add(new DijkstraModule());
         if (withNoTransit) {
-          modules.add(new DijkstraWithNoTransitModule());
           modules.add(new YenWithNoTransitModule());
         } else {
-          modules.add(new DijkstraModule());
           modules.add(new YenModule());
         }
         break;
@@ -74,10 +76,8 @@ public class App {
         break;
       case DISJOINT:
         if (withNoTransit) {
-          modules.add(new DijkstraWithNoTransitModule());
           modules.add(new DisjointWithNoTransitModule());
         } else {
-          modules.add(new DijkstraModule());
           modules.add(new DisjointModule());
         }
         break;
@@ -124,8 +124,8 @@ public class App {
       for (int i = 0; i < repeatsCount; i++) {
         log.debug("perform benchmark; step number: {}, cpeCount: {}", i, currentCpeCount);
         final MutableNetwork<Node, ParallelEdges> network =
-            simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled,
-                algorithm == DISJOINT ? COMPARE_EDGES_BY_USED_AND_COST : COMPARE_EDGES_BY_COST);
+            simulateSdWanTopology(gwCount, currentCpeCount, linksBetweenGwEnabled, costGeneration,
+                algorithm);
         log.trace("network is simulated, network: {}", network);
         final Stopwatch stopwatch = Stopwatch.createStarted();
         allPairsCalculator.calculate(network, pathsPerPair);

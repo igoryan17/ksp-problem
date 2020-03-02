@@ -1,8 +1,8 @@
 package com.igoryan.model.path;
 
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
 import com.igoryan.model.network.NodeEdgeTuple;
+import com.igoryan.model.network.edge.Edge;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;

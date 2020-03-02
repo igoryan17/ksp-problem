@@ -2,10 +2,12 @@ package com.igoryan.model.network;
 
 import static java.util.Collections.emptyList;
 
+import com.igoryan.model.network.edge.Edge;
 import com.igoryan.model.path.ShortestPath;
 import com.igoryan.model.path.ShortestPathCreator;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +18,13 @@ import lombok.NonNull;
 import lombok.Setter;
 
 public final class Node {
+
+  public static final Comparator<Node> COMPARE_NODES_BY_DISTANCE =
+      Comparator.comparingLong(Node::getDistance);
+  public static final Comparator<Node> COMPARE_BY_PREDECESSOR_AND_DISTANCE = Comparator
+      .comparing(Node::getEdgePredecessor,
+          Comparator.nullsLast(Comparator.comparing(Edge::isUsed, Boolean::compareTo)))
+      .thenComparing(Node::getDistance);
 
   @Getter
   private final Integer swNum;

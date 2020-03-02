@@ -6,8 +6,9 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.ArrayList;
@@ -27,13 +28,13 @@ public final class NaiveYenKShortestPathCalculatorWithNoTransit
 
   @Inject
   public NaiveYenKShortestPathCalculatorWithNoTransit(
-      final ShortestPathCalculator shortestPathCalculator) {
-    super(shortestPathCalculator);
+      final @Named("noTransit") ShortestPathCalculator shortestPathCalculator) {
+    super(shortestPathCalculator, shortestPathCalculator);
   }
 
   @Override
   public List<YenShortestPath> calculate(final @NonNull Node src, final @NonNull Node dst,
-      final @NonNull MutableNetwork<Node, ParallelEdges> network, final int count) {
+      final MutableNetwork<Node, ParallelEdges> network, final int count) {
     prepareNetwork(network);
     addOutEdgesToNetwork(src, network);
     final YenShortestPath firstShortestPath = getFirstShortestPath(src, dst, network);

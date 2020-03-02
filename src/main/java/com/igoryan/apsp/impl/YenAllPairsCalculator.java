@@ -4,9 +4,10 @@ import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Network;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.ArrayList;
@@ -18,9 +19,8 @@ public final class YenAllPairsCalculator extends BaseAllPairsCalculator {
 
   @Inject
   public YenAllPairsCalculator(
-      final @NonNull KShortestPathsCalculator<YenShortestPath> kShortestPathsCalculator,
-      final @NonNull ShortestPathCalculator shortestPathCalculator) {
-    super(kShortestPathsCalculator, shortestPathCalculator);
+      final @NonNull KShortestPathsCalculator<YenShortestPath> kShortestPathsCalculator) {
+    super(kShortestPathsCalculator);
   }
 
   @Override

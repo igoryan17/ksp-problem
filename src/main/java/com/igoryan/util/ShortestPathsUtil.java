@@ -4,7 +4,7 @@ import com.google.common.graph.Graphs;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.Network;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.ShortestPath;
 import com.igoryan.model.path.ShortestPathCreator;
 import com.igoryan.model.tree.ReversedShortestPathTree;
@@ -85,7 +85,8 @@ public final class ShortestPathsUtil {
     swNumToNodeOfTree.put(addedNode.getSwNum(), addedNode);
   }
 
-  public static Set<Node> getTransitNodes(final @NonNull Network<Node, ParallelEdges> network) {
+  public static Set<Node> getTransitNodes(
+      final Network<Node, ParallelEdges> network) {
     return network.nodes().stream()
         .filter(Node::isTransit)
         .collect(Collectors.toSet());
@@ -100,8 +101,7 @@ public final class ShortestPathsUtil {
   }
 
   public static MutableNetwork<Node, ParallelEdges> subNetworkExpectInEdgesOfNoTransit(
-      final @NonNull
-          MutableNetwork<Node, ParallelEdges> network) {
+      final @NonNull MutableNetwork<Node, ParallelEdges> network) {
     final MutableNetwork<Node, ParallelEdges> result = Graphs.copyOf(network);
     result.nodes().stream()
         .filter(node -> !node.isTransit())

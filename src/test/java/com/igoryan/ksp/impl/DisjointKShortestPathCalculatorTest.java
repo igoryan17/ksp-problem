@@ -1,16 +1,17 @@
 package com.igoryan.ksp.impl;
 
-import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_USED_AND_COST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
+import com.google.common.collect.Lists;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ArrayYenParallelEdges;
+import com.igoryan.model.network.edge.Edge;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.sp.impl.DijkstraShortestPathCalculator;
 import java.util.List;
@@ -35,15 +36,11 @@ public class DisjointKShortestPathCalculatorTest {
     final Edge secondTransitToDst = new Edge(1, (short) 5, 2, (short) 5, 5L);
     final Edge thirdTransitToDst = new Edge(1, (short) 6, 2, (short) 6, 6L);
 
-    final ParallelEdges srcToTransit = new ParallelEdges(0, 1, 3, COMPARE_EDGES_BY_USED_AND_COST);
-    srcToTransit.add(firstSrcToTransit);
-    srcToTransit.add(secondSrcToTransit);
-    srcToTransit.add(thirdSrcToTransit);
+    final ArrayYenParallelEdges srcToTransit = new ArrayYenParallelEdges(0, 1,
+        Lists.newArrayList(firstSrcToTransit, secondSrcToTransit, thirdSrcToTransit));
 
-    final ParallelEdges transitToDst = new ParallelEdges(1, 2, 3, COMPARE_EDGES_BY_USED_AND_COST);
-    transitToDst.add(firstTransitToDst);
-    transitToDst.add(secondTransitToDst);
-    transitToDst.add(thirdTransitToDst);
+    final ArrayYenParallelEdges transitToDst = new ArrayYenParallelEdges(1, 2,
+        Lists.newArrayList(firstTransitToDst, secondTransitToDst, thirdTransitToDst));
 
     final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
         .expectedNodeCount(3)

@@ -5,10 +5,10 @@ import static java.util.Collections.emptyList;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.Network;
 import com.igoryan.ksp.KShortestPathsCalculator;
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
 import com.igoryan.model.network.SortedParallelEdges;
+import com.igoryan.model.network.edge.Edge;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
 import com.igoryan.model.path.ShortestPathCreator;
 import com.igoryan.model.tree.KShortestPathsTree;
@@ -160,10 +160,10 @@ public abstract class BaseMpsKShortestPathCalculator
       final long costFromHead = endpointPair.target().getDistance();
       final long costFromTail = endpointPair.source().getDistance();
       if (Long.MAX_VALUE == costFromHead || Long.MAX_VALUE == costFromTail) {
-        parallelEdges.forEach(edge -> edge.setReducedCost(Long.MAX_VALUE));
+        parallelEdges.getEdges().forEach(edge -> edge.setReducedCost(Long.MAX_VALUE));
         continue;
       }
-      parallelEdges
+      parallelEdges.getEdges()
           .forEach(edge -> edge.setReducedCost(costFromHead - costFromTail + edge.getCost()));
     }
   }
@@ -177,6 +177,7 @@ public abstract class BaseMpsKShortestPathCalculator
         continue;
       }
       final List<Edge> notSortedEdges = outEdges.stream()
+          .map(ParallelEdges::getEdges)
           .flatMap(Collection::stream)
           .filter(edge -> edge.getReducedCost() < Long.MAX_VALUE)
           .collect(Collectors.toList());

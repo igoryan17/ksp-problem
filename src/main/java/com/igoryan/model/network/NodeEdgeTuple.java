@@ -1,5 +1,6 @@
 package com.igoryan.model.network;
 
+import com.igoryan.model.network.edge.Edge;
 import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;

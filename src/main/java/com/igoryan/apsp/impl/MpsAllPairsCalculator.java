@@ -6,7 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.igoryan.ksp.KShortestPathsCalculator;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.MpsShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.ArrayList;
@@ -18,9 +18,8 @@ public final class MpsAllPairsCalculator extends BaseAllPairsCalculator {
 
   @Inject
   public MpsAllPairsCalculator(
-      final @NonNull KShortestPathsCalculator<MpsShortestPath> kShortestPathsCalculator,
-      final @NonNull ShortestPathCalculator shortestPathCalculator) {
-    super(kShortestPathsCalculator, shortestPathCalculator);
+      final @NonNull KShortestPathsCalculator<MpsShortestPath> kShortestPathsCalculator) {
+    super(kShortestPathsCalculator);
   }
 
   @Override

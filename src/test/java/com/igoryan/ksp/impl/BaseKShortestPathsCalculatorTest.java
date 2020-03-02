@@ -1,18 +1,19 @@
 package com.igoryan.ksp.impl;
 
-import static com.igoryan.model.network.ParallelEdges.COMPARE_EDGES_BY_COST;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
+import com.google.common.collect.Lists;
 import com.google.common.graph.MutableNetwork;
 import com.google.common.graph.NetworkBuilder;
 import com.igoryan.ksp.KShortestPathsCalculator;
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ArrayYenParallelEdges;
+import com.igoryan.model.network.edge.Edge;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.ShortestPath;
 import com.igoryan.sp.ShortestPathCalculator;
 import java.util.List;
@@ -22,6 +23,7 @@ import org.junit.Test;
 public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
 
   protected ShortestPathCalculator shortestPathCalculator;
+  protected ShortestPathCalculator shortestPathCalculatorWithNoTransit;
   protected KShortestPathsCalculator<T> kShortestPathsCalculator;
 
   @After
@@ -33,21 +35,25 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
   public void twoNodesWithTwoEdges() {
     final Node src = new Node(1, true);
     final Node dst = new Node(2, true);
+
     final Edge firstEdge = new Edge(1, (short) 1, 2, (short) 1, 1L);
     final Edge secondEdge = new Edge(1, (short) 2, 2, (short) 2, 2L);
-    final ParallelEdges parallelEdges = new ParallelEdges(1, 2, 2, COMPARE_EDGES_BY_COST);
-    parallelEdges.add(firstEdge);
-    parallelEdges.add(secondEdge);
+    final ArrayYenParallelEdges parallelEdges =
+        new ArrayYenParallelEdges(1, 2, Lists.newArrayList(firstEdge, secondEdge));
+
     final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
         .allowsParallelEdges(false)
         .allowsSelfLoops(false)
         .expectedEdgeCount(1)
         .expectedNodeCount(2)
         .build();
+
     network.addNode(src);
     network.addNode(dst);
     network.addEdge(src, dst, parallelEdges);
+
     final List<T> result = kShortestPathsCalculator.calculate(src, dst, network, 2);
+
     assertThat(result, hasSize(2));
     assertThat(result.get(0).getOriginalCost(), is(1L));
     assertThat(result.get(0).getEdges(), contains(firstEdge));
@@ -62,14 +68,13 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
     final Node dst = new Node(3, true);
 
     final Edge fromSrcToTransit = new Edge(1, (short) 1, 2, (short) 1, 1L);
-    final ParallelEdges fromSrcToTransitEdges = new ParallelEdges(1, 2, 1, COMPARE_EDGES_BY_COST);
-    fromSrcToTransitEdges.add(fromSrcToTransit);
+    final ArrayYenParallelEdges fromSrcToTransitEdges =
+        new ArrayYenParallelEdges(1, 2, Lists.newArrayList(fromSrcToTransit));
 
     final Edge firstFromTransitToSource = new Edge(2, (short) 2, 3, (short) 1, 1L);
     final Edge secondFromTransitToSource = new Edge(2, (short) 3, 3, (short) 2, 2L);
-    final ParallelEdges fromTransitToDstEdges = new ParallelEdges(2, 3, 2, COMPARE_EDGES_BY_COST);
-    fromTransitToDstEdges.add(firstFromTransitToSource);
-    fromTransitToDstEdges.add(secondFromTransitToSource);
+    final ArrayYenParallelEdges fromTransitToDstEdges = new ArrayYenParallelEdges(2, 3,
+        Lists.newArrayList(firstFromTransitToSource, secondFromTransitToSource));
 
     final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
         .allowsParallelEdges(false)
@@ -96,35 +101,39 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
   }
 
   @Test
-  public void testWIthCycle() {
+  public void testWithCycle() {
     final Node src = new Node(1, true);
     final Node transit1 = new Node(2, true);
     final Node transit2 = new Node(3, true);
     final Node dst = new Node(4, true);
 
-    final ParallelEdges fromSrcToTransit1 = new ParallelEdges(1, 2, 2, COMPARE_EDGES_BY_COST);
     final Edge fromSrcToTransit1Cost1 = new Edge(1, (short) 1, 2, (short) 1, 1L);
     final Edge fromSrcToTransit1Cost2 = new Edge(1, (short) 2, 2, (short) 2, 2L);
-    fromSrcToTransit1.add(fromSrcToTransit1Cost1);
-    fromSrcToTransit1.add(fromSrcToTransit1Cost2);
+    final ArrayYenParallelEdges fromSrcToTransit1 =
+        new ArrayYenParallelEdges(1, 2,
+            Lists.newArrayList(fromSrcToTransit1Cost1, fromSrcToTransit1Cost2));
 
-    final ParallelEdges fromSrcToTransit2 = new ParallelEdges(1, 3, 2, COMPARE_EDGES_BY_COST);
     final Edge fromSrcToTransit2Cost1 = new Edge(1, (short) 3, 3, (short) 1, 1L);
     final Edge fromSrcToTransit2Cost2 = new Edge(1, (short) 4, 3, (short) 2, 2L);
-    fromSrcToTransit2.add(fromSrcToTransit2Cost1);
-    fromSrcToTransit2.add(fromSrcToTransit2Cost2);
+    final ArrayYenParallelEdges fromSrcToTransit2 =
+        new ArrayYenParallelEdges(1, 3,
+            Lists.newArrayList(fromSrcToTransit2Cost1, fromSrcToTransit2Cost2));
 
-    final ParallelEdges fromTransit1ToTransit2 = new ParallelEdges(2, 3, 1, COMPARE_EDGES_BY_COST);
-    fromTransit1ToTransit2.add(new Edge(2, (short) 3, 3, (short) 3, 5L));
+    final ArrayYenParallelEdges fromTransit1ToTransit2 =
+        new ArrayYenParallelEdges(2, 3,
+            Lists.newArrayList(new Edge(2, (short) 3, 3, (short) 3, 5L)));
 
-    final ParallelEdges fromTransit2ToTransit1 = new ParallelEdges(3, 2, 1, COMPARE_EDGES_BY_COST);
-    fromTransit2ToTransit1.add(new Edge(3, (short) 4, 2, (short) 4, 6L));
+    final ArrayYenParallelEdges fromTransit2ToTransit1 =
+        new ArrayYenParallelEdges(3, 2,
+            Lists.newArrayList(new Edge(3, (short) 4, 2, (short) 4, 6L)));
 
-    final ParallelEdges fromTransit1ToDst = new ParallelEdges(2, 4, 1, COMPARE_EDGES_BY_COST);
-    fromTransit1ToDst.add(new Edge(2, (short) 4, 4, (short) 1, 3L));
+    final ArrayYenParallelEdges fromTransit1ToDst =
+        new ArrayYenParallelEdges(2, 4,
+            Lists.newArrayList(new Edge(2, (short) 4, 4, (short) 1, 3L)));
 
-    final ParallelEdges fromTransit2ToDst = new ParallelEdges(3, 4, 1, COMPARE_EDGES_BY_COST);
-    fromTransit2ToDst.add(new Edge(3, (short) 5, 4, (short) 2, 4L));
+    final ArrayYenParallelEdges fromTransit2ToDst =
+        new ArrayYenParallelEdges(3, 4,
+            Lists.newArrayList(new Edge(3, (short) 5, 4, (short) 2, 4L)));
 
     final MutableNetwork<Node, ParallelEdges> network = NetworkBuilder.directed()
         .expectedNodeCount(4)
@@ -149,44 +158,52 @@ public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
 
     assertThat(calculated.get(0).getOriginalCost(), is(4L));
     assertThat(calculated.get(0).getEdges(),
-        contains(fromSrcToTransit1Cost1, fromTransit1ToDst.peek()));
+        contains(fromSrcToTransit1Cost1, fromTransit1ToDst.getFirstUnusedOrNull()));
 
     assertThat(calculated.get(1).getOriginalCost(), is(5L));
     assertThat(calculated.get(1).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.peek()),
-        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.peek())));
+        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.getFirstUnusedOrNull())));
 
     assertThat(calculated.get(2).getOriginalCost(), is(5L));
     assertThat(calculated.get(2).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.peek()),
-        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.peek())));
+        contains(fromSrcToTransit1Cost2, fromTransit1ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToDst.getFirstUnusedOrNull())));
 
     assertThat(calculated.get(3).getOriginalCost(), is(6L));
     assertThat(calculated.get(3).getEdges(),
-        contains(fromSrcToTransit2Cost2, fromTransit2ToDst.peek()));
+        contains(fromSrcToTransit2Cost2, fromTransit2ToDst.getFirstUnusedOrNull()));
 
     assertThat(calculated.get(4).getOriginalCost(), is(10L));
     assertThat(calculated.get(4).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
-        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.getFirstUnusedOrNull(),
+            fromTransit2ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.getFirstUnusedOrNull(),
+            fromTransit1ToDst.getFirstUnusedOrNull())
     ));
 
     assertThat(calculated.get(5).getOriginalCost(), is(10L));
     assertThat(calculated.get(5).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
-        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+        contains(fromSrcToTransit1Cost1, fromTransit1ToTransit2.getFirstUnusedOrNull(),
+            fromTransit2ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost1, fromTransit2ToTransit1.getFirstUnusedOrNull(),
+            fromTransit1ToDst.getFirstUnusedOrNull())
     ));
 
     assertThat(calculated.get(6).getOriginalCost(), is(11L));
     assertThat(calculated.get(6).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
-        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.getFirstUnusedOrNull(),
+            fromTransit2ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.getFirstUnusedOrNull(),
+            fromTransit1ToDst.getFirstUnusedOrNull())
     ));
 
     assertThat(calculated.get(7).getOriginalCost(), is(11L));
     assertThat(calculated.get(7).getEdges(), anyOf(
-        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.peek(), fromTransit2ToDst.peek()),
-        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.peek(), fromTransit1ToDst.peek())
+        contains(fromSrcToTransit1Cost2, fromTransit1ToTransit2.getFirstUnusedOrNull(),
+            fromTransit2ToDst.getFirstUnusedOrNull()),
+        contains(fromSrcToTransit2Cost2, fromTransit2ToTransit1.getFirstUnusedOrNull(),
+            fromTransit1ToDst.getFirstUnusedOrNull())
     ));
 
     final List<T> calculatedWithMoreThanAvailable =

@@ -4,37 +4,39 @@ import com.google.common.collect.MinMaxPriorityQueue;
 import com.google.common.graph.EndpointPair;
 import com.google.common.graph.MutableNetwork;
 import com.igoryan.ksp.KShortestPathsCalculator;
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.Edge;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.ShortestPath;
-import com.igoryan.model.path.ShortestPathCreator;
 import com.igoryan.model.path.YenShortestPath;
 import com.igoryan.model.tree.ShortestPathsTree;
 import com.igoryan.sp.ShortestPathCalculator;
 import com.igoryan.util.ShortestPathsUtil;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2(topic = "com.igoryan.ksp")
 abstract class BaseYenKShortestPathsCalculator
     implements KShortestPathsCalculator<YenShortestPath> {
-
-  protected static final ShortestPathCreator<YenShortestPath> SHORTEST_PATH_CREATOR =
-      (src, dst, edges, nodes) -> new YenShortestPath(src, dst, edges, nodes, dst.getDistance());
 
   protected final Map<Integer, ShortestPathsTree<YenShortestPath>>
       srcSwNumToCachedShortestPathTree = new HashMap<>();
 
   protected final ShortestPathCalculator shortestPathCalculator;
+  protected final ShortestPathCalculator shortestPathCalculatorWithNoTransit;
 
   protected BaseYenKShortestPathsCalculator(
-      final ShortestPathCalculator shortestPathCalculator) {
+      final ShortestPathCalculator shortestPathCalculator,
+      final ShortestPathCalculator shortestPathCalculatorWithNoTransit) {
     this.shortestPathCalculator = shortestPathCalculator;
+    this.shortestPathCalculatorWithNoTransit = shortestPathCalculatorWithNoTransit;
   }
 
   @Nullable
@@ -44,7 +46,8 @@ abstract class BaseYenKShortestPathsCalculator
         srcSwNumToCachedShortestPathTree.computeIfAbsent(src.getSwNum(), key -> {
           shortestPathCalculator.calculate(src, dst, network);
           return ShortestPathsUtil
-              .buildRecursively(YenShortestPath.class, src, SHORTEST_PATH_CREATOR, network.nodes());
+              .buildRecursively(YenShortestPath.class, src,
+                  YenShortestPath.YEN_SHORTEST_PATH_CREATOR, network.nodes());
         });
     return pathsTree.getShortestPath(dst.getSwNum());
   }
@@ -68,46 +71,39 @@ abstract class BaseYenKShortestPathsCalculator
         final YenShortestPath rootPath = previousShortest.subPath(i);
         // Remove the links that are part of the previous shortest paths which share the same
         // root path.
-        final Map<EndpointPair<Node>, List<Edge>> removedEdges = new HashMap<>();
-        final List<Node> removedNodes = new ArrayList<>();
+        final Set<EndpointPair<Node>> pairsWithMarkedEdges = new HashSet<>();
         final Map<EndpointPair<Node>, ParallelEdges> endPointPairToRemovedEdges = new HashMap<>();
         for (YenShortestPath shortestPath : result) {
           if (!shortestPath.containsSubPath(rootPath)) {
             continue;
           }
           final EndpointPair<Node> nodePair = shortestPath.getIncidentNodes(i);
+          log.trace("remove edge of shortest path after spur node: nodePair: {}", nodePair);
           final Edge removedEdge = shortestPath.getEdges().get(i);
+          log.trace("remove edge from network; removedEdge: {}, nodePair: {}", removedEdge,
+              nodePair);
           final ParallelEdges parallelEdges = network.edgeConnectingOrNull(nodePair);
           if (parallelEdges == null) {
-            // already removed, because all edges covered
+            // already removed
             continue;
           }
-          parallelEdges.remove(removedEdge);
-          if (parallelEdges.isEmpty()) {
+          parallelEdges.markAsUsed(removedEdge);
+          pairsWithMarkedEdges.add(nodePair);
+          if (parallelEdges.allUsed()) {
             network.removeEdge(parallelEdges);
-            parallelEdges.add(removedEdge);
             endPointPairToRemovedEdges.put(nodePair, parallelEdges);
-          } else {
-            removedEdges
-                .computeIfAbsent(nodePair, key -> new ArrayList<>())
-                .add(removedEdge);
           }
         }
-        // remove each node in root path except spurNode
+        // set nodes of root path as no transit, all nodes of root path are transit under definition
         for (int j = 0; j < i; j++) {
           final Node node = rootPath.getNodes().get(j);
-          removedNodes.add(node);
-          network.incidentEdges(node).forEach(edge -> {
-            final EndpointPair<Node> endpointPair = network.incidentNodes(edge);
-            endPointPairToRemovedEdges.put(endpointPair, edge);
-          });
-          network.removeNode(node);
+          node.setTransit(false);
         }
         // Spur node is retrieved from the previous k-shortest path, k − 1.
         final Node spurNode = previousShortest.getNodes().get(i);
-        final YenShortestPath spurPath =
-            shortestPathCalculator
-                .calculate(YenShortestPath.class, spurNode, dst, network, SHORTEST_PATH_CREATOR);
+        final YenShortestPath spurPath = shortestPathCalculatorWithNoTransit
+            .calculate(YenShortestPath.class, spurNode, dst, network,
+                YenShortestPath.YEN_SHORTEST_PATH_CREATOR);
         if (spurPath != null) {
           YenShortestPath totalPath = rootPath.append(spurPath);
           if (storage.size() == (count - k)) {
@@ -115,15 +111,19 @@ abstract class BaseYenKShortestPathsCalculator
           }
           storage.add(totalPath);
         }
-        removedNodes.forEach(network::addNode);
+        // set transit nodes of root path to transit back
+        for (int j = 0; j < i; j++) {
+          final Node node = rootPath.getNodes().get(j);
+          node.setTransit(true);
+        }
         endPointPairToRemovedEdges.forEach(network::addEdge);
-        removedEdges.forEach((nodePair, edges) -> {
+        pairsWithMarkedEdges.forEach(nodePair -> {
           final ParallelEdges parallelEdges =
               Objects.requireNonNull(network.edgeConnectingOrNull(nodePair));
-          parallelEdges.addAll(edges);
+          parallelEdges.clearMarkedEdges();
         });
       }
-      YenShortestPath kthPath = findKstShortestPathInCandidates(result, storage);
+      final YenShortestPath kthPath = storage.poll();
       if (kthPath == null) {
         break;
       }
@@ -131,31 +131,10 @@ abstract class BaseYenKShortestPathsCalculator
     }
   }
 
-  @Nullable
-  protected YenShortestPath findKstShortestPathInCandidates(
-      final List<YenShortestPath> result,
-      final MinMaxPriorityQueue<YenShortestPath> storage) {
-    boolean isNewPath;
-    YenShortestPath kthPath;
-    do {
-      kthPath = storage.poll();
-      isNewPath = true;
-      if (kthPath != null) {
-        for (ShortestPath p : result) {
-          // Check to see if this candidate path duplicates a previously found path
-          // compare by hash code firstly to fast
-          if (p.hashCode() == kthPath.hashCode() && p.equals(kthPath)) {
-            isNewPath = false;
-            break;
-          }
-        }
-      }
-    } while (!isNewPath);
-    return kthPath;
-  }
-
   @Override
   public void clear() {
     srcSwNumToCachedShortestPathTree.clear();
+    shortestPathCalculator.clear();
+    shortestPathCalculatorWithNoTransit.clear();
   }
 }

@@ -5,15 +5,20 @@ import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
 import com.google.common.graph.EndpointPair;
-import com.igoryan.model.network.Edge;
 import com.igoryan.model.network.EdgeCostRetriever;
 import com.igoryan.model.network.Node;
+import com.igoryan.model.network.edge.Edge;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
 
 public class ShortestPath {
+
+  public static final Comparator<ShortestPath> COMPARE_BY_COST =
+      Comparator.comparingLong(ShortestPath::getCost);
+
   @Getter
   protected final Node src;
   @Getter

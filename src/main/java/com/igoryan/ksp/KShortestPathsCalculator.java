@@ -2,7 +2,7 @@ package com.igoryan.ksp;
 
 import com.google.common.graph.MutableNetwork;
 import com.igoryan.model.network.Node;
-import com.igoryan.model.network.ParallelEdges;
+import com.igoryan.model.network.edge.ParallelEdges;
 import com.igoryan.model.path.ShortestPath;
 import java.util.List;
 
