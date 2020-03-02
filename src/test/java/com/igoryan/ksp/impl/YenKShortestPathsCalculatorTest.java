@@ -12,7 +12,7 @@ public class YenKShortestPathsCalculatorTest
   public void setUp() throws Exception {
     shortestPathCalculator = new DijkstraShortestPathCalculator();
     shortestPathCalculatorWithNoTransit = new DijkstraShortestPathCalculatorWithNoTransit();
-    kShortestPathsCalculator = new YenKShortestPathsCalculator(shortestPathCalculator,
-        shortestPathCalculatorWithNoTransit);
+    kShortestPathsCalculator = new YenKShortestPathsCalculator(shortestPathCalculator
+    );
   }
 }

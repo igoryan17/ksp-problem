@@ -57,11 +57,11 @@ public class App {
     final List<Module> modules = new ArrayList<>();
     switch (algorithm) {
       case YEN:
-        modules.add(new DijkstraWithNoTransitModule());
-        modules.add(new DijkstraModule());
         if (withNoTransit) {
+          modules.add(new DijkstraWithNoTransitModule());
           modules.add(new YenWithNoTransitModule());
         } else {
+          modules.add(new DijkstraModule());
           modules.add(new YenModule());
         }
         break;

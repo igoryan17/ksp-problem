@@ -29,7 +29,7 @@ public final class NaiveYenKShortestPathCalculatorWithNoTransit
   @Inject
   public NaiveYenKShortestPathCalculatorWithNoTransit(
       final @Named("noTransit") ShortestPathCalculator shortestPathCalculator) {
-    super(shortestPathCalculator, shortestPathCalculator);
+    super(shortestPathCalculator);
   }
 
   @Override
