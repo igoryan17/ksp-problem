@@ -142,6 +142,18 @@ public final class Node {
         .create(Objects.requireNonNull(swNumToOriginalNode.get(swNum)), dst, edges, nodes);
   }
 
+  public boolean hasUnusedPredecessors() {
+    Node temp = this;
+    while (temp.getNodePredecessor() != null) {
+      if (temp.getEdgePredecessor().isUsed()) {
+        temp = temp.getNodePredecessor();
+      } else {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean equals(final Object o) {
     if (this == o) {

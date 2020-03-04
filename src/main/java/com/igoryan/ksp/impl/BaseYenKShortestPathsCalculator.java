@@ -128,6 +128,5 @@ abstract class BaseYenKShortestPathsCalculator
   @Override
   public void clear() {
     srcSwNumToCachedShortestPathTree.clear();
-    shortestPathCalculator.clear();
   }
 }

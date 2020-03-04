@@ -18,6 +18,7 @@ public final class QueueYenParallelEdges extends BaseParallelEdges {
       final @NonNull List<Edge> edges) {
     super(srcSwNum, dstSwNum);
     this.edges = new PriorityQueue<>(edges.size(), COMPARE_EDGES_BY_COST_AND_PORTS);
+    this.edges.addAll(edges);
   }
 
   @Override

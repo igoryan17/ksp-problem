@@ -23,7 +23,6 @@ import org.junit.Test;
 public class BaseKShortestPathsCalculatorTest<T extends ShortestPath> {
 
   protected ShortestPathCalculator shortestPathCalculator;
-  protected ShortestPathCalculator shortestPathCalculatorWithNoTransit;
   protected KShortestPathsCalculator<T> kShortestPathsCalculator;
 
   @After
